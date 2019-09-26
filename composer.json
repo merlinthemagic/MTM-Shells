@@ -1,0 +1,30 @@
+{
+	"name" : "merlinthemagic/mtm-shells",
+	"type" : "library",
+	"description" : "Shell tools for PHP 7",
+	"version" : "0.0.1",
+	"keywords" : [
+		"bash",
+		"routeros"
+	],
+	"homepage" : "https://github.com/merlinthemagic/MTM-Shells",
+	"license" : "LGPL-3.0",
+	"authors" : [{
+			"name" : "Martin Peter Madsen",
+			"email" : "dev@martinpetermadsen.com",
+			"role" : "Developer"
+		}
+	],
+	"require" : {
+		"php" : ">=7.3.0",
+		"merlinthemagic/mtm-utilities" : ">=0.0.1",
+		"merlinthemagic/mtm-fs" : ">=0.0.1",
+		"merlinthemagic/mtm-async" : ">=0.0.1"
+	},
+	"autoload" : {
+		"files" : [
+			"./Enable.php"
+		]
+	},
+	"minimum-stability" : "dev"
+}
