@@ -2,7 +2,7 @@
 	"name" : "merlinthemagic/mtm-shells",
 	"type" : "library",
 	"description" : "Shell tools for PHP 7",
-	"version" : "0.0.1",
+	"version" : "0.0.2",
 	"keywords" : [
 		"bash",
 		"routeros"
@@ -18,8 +18,7 @@
 	"require" : {
 		"php" : ">=7.3.0",
 		"merlinthemagic/mtm-utilities" : ">=0.0.1",
-		"merlinthemagic/mtm-fs" : ">=0.0.1",
-		"merlinthemagic/mtm-async" : ">=0.0.1"
+		"merlinthemagic/mtm-fs" : ">=0.0.1"
 	},
 	"autoload" : {
 		"files" : [

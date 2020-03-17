@@ -200,6 +200,9 @@ class Initialization extends Processing
 					} elseif ($bashPath === false) {
 						throw new \Exception("Missing Bash application");
 					} elseif ($pythonPath === false) {
+						//e.g. Centos8 does not ship with python
+						//dnf install python3 -y
+						//ln -s /usr/bin/python3 /usr/bin/python
 						throw new \Exception("Missing Python application");
 					}
 					

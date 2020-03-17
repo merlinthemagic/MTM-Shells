@@ -141,8 +141,9 @@ abstract class Base
 	{
 		$this->exec();
 		while(true) {
+			
+			$this->getParent()->read($this);
 			if ($this->getIsDone() === false) {
-				\MTM\Async\Factories::getServices()->getLoop()->runOnce();
 				usleep(10000); //this structure has to go
 			} elseif (is_object($this->_error) === false) {
 				return $this->parse();

@@ -4,16 +4,14 @@ namespace MTM\Shells\Models\Shells\RouterOs;
 
 class Processing extends Termination
 {
-	public function run($subObj)
+	public function execute($cmdObj)
 	{
-		$cmdObj		= $this->getCurrent();
-		if (is_object($cmdObj) === true) {
-			if ($cmdObj->getIsRunning() === false) {
-				$this->getPipes()->resetStdOut();
-				$this->write($cmdObj);
-			} else {
-				$this->read($cmdObj);
-			}
+		if ($this->getChild() === null) {
+			$this->getPipes()->resetStdOut();
+			$this->write($cmdObj);
+			return $this;
+		} else {
+			return $this->getChild()->execute($cmdObj);
 		}
 	}
 	public function write($cmdObj)
