@@ -23,6 +23,7 @@ class Actions extends Initialization
 				$rObj->setTimeout($timeout);
 			}
 			return $rObj;
+			
 		} else {
 			return $this->getChild()->getCmd($strCmd, $regExp, $timeout);
 		}

@@ -2,7 +2,7 @@
 	"name" : "merlinthemagic/mtm-shells",
 	"type" : "library",
 	"description" : "Shell tools for PHP 7",
-	"version" : "0.0.2",
+	"version" : "0.0.3",
 	"keywords" : [
 		"bash",
 		"routeros"
