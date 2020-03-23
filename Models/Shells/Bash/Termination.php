@@ -27,6 +27,20 @@ class Termination extends \MTM\Shells\Models\Shells\Base
 		}
 		$cmdObj->get($throw);
 	}
+	public function isBaseTerm()
+	{
+		//figure out if the base pipes are still there
+		if ($this->getParent() !== null) {
+			return $this->getParent()->isBaseTerm();
+		} else {
+			$exists	= $this->getBasePipes()->getStdOut()->getExists();
+			if ($exists === true) {
+				return false;
+			} else {
+				return true;
+			}
+		}
+	}
 	public function terminate()
 	{
 		if ($this->_isInit === true) {
@@ -34,39 +48,42 @@ class Termination extends \MTM\Shells\Models\Shells\Base
 			if (is_object($this->getChild()) === true) {
 				$this->getChild()->terminate();
 			}
+			
+			if ($this->isBaseTerm() === false) {
 
-			if ($this->getParent() !== null) {
-				//make sure the last command is dead, give it the default amount of time
-				//we really do need to get the prompt of our parent shell will have trouble
-				$this->issueSigInt(false);
-			} else {
-				//make sure the last command is dead, give it one sec to exit
-				//we really dont care if it exits clean or not we are the base shell
-				//and need to shut down. if we wait too long any read error will not be thrown
-				$this->issueSigInt(false, 1000);
-			}
-
-			//exit the shell
-			$cmdObj		= $this->getCmd();
-			$strCmd		= "exit";
-			$regEx		= false;
-			$timeout	= 0;
-			if ($this->getParent() !== null) {
-				$regEx		= "(".preg_quote($this->getParent()->getRegEx()).")";
-				$timeout	= $cmdObj->getTimeout();
-			}
-			$cmdObj->setCmd($strCmd)->setDelimitor($regEx)->setTimeout($timeout);
-			$cmdObj->get(false);
-
-			if ($this->getParent() === null) {
-				//the watcher process is looking for the presense of procLock
-				//this is the emergency breake if everything else fails
-				//process will be dead within 10 sec
-				$this->getPipes()->getLock()->delete();
-				$this->_basePipes	= null;
-			} else {
-				$this->getParent()->setChild(null);
-				$this->setParent(null);
+				if ($this->getParent() !== null) {
+					//make sure the last command is dead, give it the default amount of time
+					//we really do need to get the prompt of our parent shell will have trouble
+					$this->issueSigInt(false);
+				} else {
+					//make sure the last command is dead, give it one sec to exit
+					//we really dont care if it exits clean or not we are the base shell
+					//and need to shut down. if we wait too long any read error will not be thrown
+					$this->issueSigInt(false, 1000);
+				}
+	
+				//exit the shell
+				$cmdObj		= $this->getCmd();
+				$strCmd		= "exit";
+				$regEx		= false;
+				$timeout	= 0;
+				if ($this->getParent() !== null) {
+					$regEx		= "(".preg_quote($this->getParent()->getRegEx()).")";
+					$timeout	= $cmdObj->getTimeout();
+				}
+				$cmdObj->setCmd($strCmd)->setDelimitor($regEx)->setTimeout($timeout);
+				$cmdObj->get(false);
+	
+				if ($this->getParent() === null) {
+					//the watcher process is looking for the presense of procLock
+					//this is the emergency breake if everything else fails
+					//process will be dead within 10 sec
+					$this->getPipes()->getLock()->delete();
+					$this->_basePipes	= null;
+				} else {
+					$this->getParent()->setChild(null);
+					$this->setParent(null);
+				}
 			}
 			
 			$this->_isInit	= false;
