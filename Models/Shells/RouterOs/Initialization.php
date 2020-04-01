@@ -12,6 +12,29 @@ class Initialization extends Processing
 	{
 		return $this->_regEx;
 	}
+	public function resetDefaultRegEx()
+	{
+		$this->_regEx	= null;
+		$strCmd			= " ";
+		$regEx			= "\]\s+\>(\s*)?$";
+		$this->getCmd($strCmd, $regEx)->get();
+		
+		$strCmd			= ":local MHIT \"\";";
+		$regChars		= "[a-zA-Z0-9\+\_\-\.\:\#\,]+";
+		$regEx			= "\[((".$regChars.")@(".$regChars."))\]\s+\>";
+		$data			= $this->getCmd($strCmd, $regEx)->get();
+		
+		//prompt may carry some junk special characters back even with colors disabled, not sure why, might be a MT issue
+		$lines			= array_filter(explode("\n", $data));
+		foreach ($lines as $line) {
+			$line	= trim($line);
+			if (preg_match("/(\[((".$regChars.")@(".$regChars."))]\s+\>)/", $line, $raw) == 1) {
+				$this->_regEx	= $raw[1];
+				break;
+			}
+		}
+		return $this->_regEx;
+	}
 	protected function getCommit()
 	{
 		if ($this->_commitChars === null) {
@@ -25,26 +48,11 @@ class Initialization extends Processing
 			$this->_isInit	= null;
 			
 			try {
-
-				$strCmd		= " ";
-				$regEx		= "\]\s+\>(\s*)?$";
-				$this->getCmd($strCmd, $regEx)->get();
 				
-				$strCmd		= ":local MHIT \"\";";
-				$regChars	= "[a-zA-Z0-9\+\_\-\.\:\#\,]+";
-				$regEx		= "\[((".$regChars.")@(".$regChars."))\]\s+\>";
-				$data		= $this->getCmd($strCmd, $regEx)->get();
+				//need the abillity to reset the shell delimitor regEx
+				//if we change the identity of the device, the prompt changes too
 
-				//prompt may carry some junk special characters back even with colors disabled, not sure why, might be a MT issue
-				$lines			= array_filter(explode("\n", $data));
-				foreach ($lines as $line) {
-					$line	= trim($line);
-					if (preg_match("/(\[((".$regChars.")@(".$regChars."))]\s+\>)/", $line, $raw) == 1) {
-						$this->_regEx	= $raw[1];
-						break;
-					}
-				}
-				if ($this->getRegEx() === null) {
+				if ($this->resetDefaultRegEx() === null) {
 					throw new \Exception("Failed to get shell prompt");
 				}
 
