@@ -22,12 +22,9 @@ class Termination extends \MTM\Shells\Models\Shells\Base
 			if (is_object($this->getChild()) === true) {
 				$this->getChild()->terminate();
 			}
-
 			if ($this->isBaseTerm() === false) {
-				
 				//make sure the last command is dead
 				$this->issueSigInt(false);
-	
 				$cmdObj		= $this->getCmd();
 				$strCmd		= "/quit";
 				$regEx		= false;
@@ -39,9 +36,15 @@ class Termination extends \MTM\Shells\Models\Shells\Base
 				$cmdObj->setCmd($strCmd)->setDelimitor($regEx)->setTimeout($timeout);
 				$cmdObj->get(false);
 				
-				if ($this->getParent() !== null) {
-					$this->getParent()->setChild(null);
+				$pObj	= $this->getParent();
+				if ($pObj !== null) {
+					$pObj->setChild(null);
 					$this->setParent(null);
+					
+					if ($pObj->getParent() === null) {
+						//below us is a base shell setup just to facilitate this shell
+						$pObj->terminate();
+					}
 				}
 			}
 			$this->_isInit	= false;
