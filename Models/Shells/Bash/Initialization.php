@@ -292,7 +292,7 @@ class Initialization extends Processing
 					$strCmd			.= " sleep 2s;";
 					
 					//kill the sleep process holding stdIn open
-					$strCmd			.= " \"".$killPath."\" -SIGTERM \$SLEEP_PID ;";
+					$strCmd			.= " \"".$killPath."\" -9 \$SLEEP_PID ;";
 					
 					//remove the directory we are working in
 					$strCmd			.= " rm -rf ".$dirObj->getPathAsString()." &";
