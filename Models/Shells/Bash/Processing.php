@@ -52,12 +52,12 @@ class Processing extends Termination
 				$cmdObj->addData($data);
 				//we handle newlines as well with modifier = /s
 				//src: https://php.net/manual/en/reference.pcre.pattern.modifiers.php
-				if ($cmdObj->getDelimitor() !== null && preg_match("/".$cmdObj->getDelimitor()."/s", $cmdObj->getData()) == 1) {
+				if ($cmdObj->getDelimitor() != "" && preg_match("/".$cmdObj->getDelimitor()."/s", $cmdObj->getData()) == 1) {
 					$cmdObj->setDone();
 				}
 			}
 			if ($cmdObj->getIsDone() === false && $cmdObj->getRunTime() > $cmdObj->getTimeout()) {
-				if ($cmdObj->getDelimitor() === false) {
+				if ($cmdObj->getDelimitor() == "") {
 					//we wanted to read until time ran out
 					$cmdObj->setDone();
 				} else {
