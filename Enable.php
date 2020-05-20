@@ -16,9 +16,12 @@ if (defined("MTM_SHELLS_BASE_PATH") === false) {
 			}
 		}
 	});
-	function loadMtmShells()
+	
+	function mtmShellsShutdown()
 	{
-		
+		if (defined("MTM_SHUTDOWN") === false) {
+			define("MTM_SHUTDOWN", true);
+		}
 	}
-	loadMtmShells();
+	register_shutdown_function("mtmShellsShutdown");
 }

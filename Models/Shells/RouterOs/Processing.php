@@ -46,7 +46,7 @@ class Processing extends Termination
 			}
 
 			if ($tTime < \MTM\Utilities\Factories::getTime()->getMicroEpoch()) {
-				throw new \Exception("Failed to get recover prompt");
+				throw new \Exception("Failed to recover prompt");
 			} else {
 
 				//wait for output to clear, sleep longer and longer or we just clog the pipe on slow connections

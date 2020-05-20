@@ -48,9 +48,8 @@ class Termination extends \MTM\Shells\Models\Shells\Base
 			if (is_object($this->getChild()) === true) {
 				$this->getChild()->terminate();
 			}
-			
 			if ($this->isBaseTerm() === false) {
-
+				
 				if ($this->getParent() !== null) {
 					//make sure the last command is dead, give it the default amount of time
 					//we really do need to get the prompt of our parent shell will have trouble

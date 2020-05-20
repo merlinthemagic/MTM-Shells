@@ -22,8 +22,10 @@ class Termination extends \MTM\Shells\Models\Shells\Base
 			if (is_object($this->getChild()) === true) {
 				$this->getChild()->terminate();
 			}
+			//throwing during shutdown is still a problem
 			if ($this->isBaseTerm() === false) {
 				//make sure the last command is dead
+				
 				$this->issueSigInt(false);
 				$cmdObj		= $this->getCmd();
 				$strCmd		= "/quit";
@@ -49,5 +51,9 @@ class Termination extends \MTM\Shells\Models\Shells\Base
 			}
 			$this->_isInit	= false;
 		}
+	}
+	public function exceptHandler($e)
+	{
+		file_put_contents("/dev/shm/merlin.txt", __METHOD__ . " - " . print_r($e->getMessage(), true) . "\n", FILE_APPEND);
 	}
 }
