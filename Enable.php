@@ -16,12 +16,4 @@ if (defined("MTM_SHELLS_BASE_PATH") === false) {
 			}
 		}
 	});
-	
-	function mtmShellsShutdown()
-	{
-		if (defined("MTM_SHUTDOWN") === false) {
-			define("MTM_SHUTDOWN", true);
-		}
-	}
-	register_shutdown_function("mtmShellsShutdown");
 }
