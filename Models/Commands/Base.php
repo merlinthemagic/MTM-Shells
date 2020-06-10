@@ -139,19 +139,24 @@ abstract class Base
 	}
 	public function get($throw=true)
 	{
-		$this->exec();
-		while(true) {
+		try {
 			
-			$this->getParent()->read($this);
-			if ($this->getIsDone() === false) {
-				usleep(10000); //this structure has to go
-			} elseif (is_object($this->_error) === false) {
-				return $this->parse();
-			} elseif ($throw === true) {
-				throw $this->_error;
-			} else {
-				return $this->_data;
+			$this->exec();
+			while(true) {
+				
+				$this->getParent()->read($this);
+				if ($this->getIsDone() === false) {
+					usleep(10000); //this structure has to go
+				} elseif (is_object($this->_error) === false) {
+					return $this->parse();
+				} elseif ($throw === true) {
+					throw $this->_error;
+				} else {
+					return $this->_data;
+				}
 			}
+		} catch (\Exception $e) {
+			throw $e;
 		}
 	}
 }

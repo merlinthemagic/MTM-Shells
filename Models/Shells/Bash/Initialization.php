@@ -159,10 +159,10 @@ class Initialization extends Processing
 
 					//process is alive and confirmed to be ours
 					//NOTE: -SIGKILL does not work on CentOS7, must be numerical for some reason
-					$strCmd		.= " ".$killPath." -9 " . $this->_spawnPid . " &";
+					$strCmd		.= " ".$killPath." -9 " . $this->_spawnPid . "; ";
 					
 					//remove the work directory since we are issuing a kill, the process will not be able to clean up
-					$strCmd		.= " rm -rf ".$this->getPipes()->getLock()->getDirectory()->getPathAsString()." &";
+					$strCmd		.= " rm -rf ".$this->getPipes()->getLock()->getDirectory()->getPathAsString()."; ";
 					
 					//log
 					$strCmd		.= " echo \"Ended bash shell: ".$this->getPipes()->getLock()->getDirectory()->getName()."\" >> ".MTM_FS_TEMP_PATH."mtm-shells.log";
