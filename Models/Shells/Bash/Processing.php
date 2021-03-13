@@ -52,7 +52,11 @@ class Processing extends Termination
 				$cmdObj->addData($data);
 				//we handle newlines as well with modifier = /s
 				//src: https://php.net/manual/en/reference.pcre.pattern.modifiers.php
-				if ($cmdObj->getDelimitor() != "" && preg_match("/".$cmdObj->getDelimitor()."/s", $cmdObj->getData()) == 1) {
+				if (
+					$cmdObj->getDelimitor() != "" 
+					&& preg_match("/".$cmdObj->getDelimitor()."/s", $cmdObj->getData()) === 1 //too costly to check return data on every read, just do raw for starters
+					&& preg_match("/".$cmdObj->getDelimitor()."/s", $cmdObj->getReturnData()) === 1 
+				) {
 					$cmdObj->setDone();
 				}
 			}

@@ -9,6 +9,7 @@ abstract class Base
 	protected $_childObj=null; //shell built on top of this instance
 	protected $_cmdObj=null; //currently executing
 	protected $_dTimeout=25000;
+	protected $_isInit=false;
 	
 	public function __construct()
 	{
@@ -30,6 +31,10 @@ abstract class Base
 	public function getType()
 	{
 		return $this->_shellType;
+	}
+	public function isInit()
+	{
+		return $this->_isInit;
 	}
 	public function setChild($obj)
 	{

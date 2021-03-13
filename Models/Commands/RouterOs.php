@@ -10,54 +10,7 @@ class RouterOs extends Base
 		$lines	= explode("\n\r", $data);
 		$lCount	= count($lines);
 		if ($lCount > 0) {
-			
-			//Command string removal from return
-			//cant be only whitespaces because we trim each line, we would likely
-			//find white spaces later in the return the result would be cutting out return data
-			if ($this->getCmd() !== null && trim($this->getCmd()) != "") {
-				
-				$strCmd		= $this->getCmd();
-				$found		= false;
-				foreach ($lines as $lKey => $line) {
-					
-					$line	= trim($line);
-					if ($line != "") {
-						
-						//after each 1000 chars the commands encur a terminal break
-						$line	= str_replace("\r\n", "", $line);
-						//is the line part of the command?
-						$cmdPos		= strpos($strCmd, $line);
-						//is the command only part of the line
-						//e.g. there is more data than just the command
-						$linePos    = strpos($line, $strCmd);
 
-						if ($cmdPos !== false || $linePos !== false) {
-							//this line holds part or all of the command
-							$found		= true;
-							if ($cmdPos !== false) {
-								$strCmd		= substr($strCmd, ($cmdPos + strlen($line)));
-								if (strlen(trim($strCmd)) < 1) {
-									//we found all of the command, nothing but whitespace left
-									$lines		= array_slice($lines, ($lKey + 1));
-									break;
-								}
-								
-							} elseif ($linePos !== false) {
-								
-								//this line holds what remains of the command, the rest is data
-								//the rest of the line is data, if it was only whitespace, it would have been caught above
-								$lines[$lKey]	= substr($line, ($linePos + strlen($strCmd)));
-								$lines			= array_slice($lines, $lKey);
-								break;
-							}
-
-						} elseif ($found === true) {
-							//we had part of the command but lost it before a match could be made
-							break;
-						}
-					}		
-				}
-			}
 			//Locate the delimitor in the return
 			if ($this->getDelimitor() !== null) {
 				//RouterOS has a nasty habit of including some non-printable chars in the return
@@ -109,6 +62,59 @@ class RouterOs extends Base
 				$lines		= array_reverse($lines);
 			}
 			$data		= implode("\n", $lines);
+		}
+		return $data;
+	}
+	protected function removeCommand()
+	{
+		//Command string removal from return
+		//cant be only whitespaces because we trim each line, we would likely
+		//find white spaces later in the return the result would be cutting out return data
+		$data	= $this->getData();
+		if ($this->getCmd() !== null && trim($this->getCmd()) != "") {
+
+			$strCmd		= $this->getCmd();
+			$found		= false;
+			foreach ($lines as $lKey => $line) {
+				
+				$line	= trim($line);
+				if ($line != "") {
+					
+					//after each 1000 chars the commands encur a terminal break
+					$line	= str_replace("\r\n", "", $line);
+					//is the line part of the command?
+					$cmdPos		= strpos($strCmd, $line);
+					//is the command only part of the line
+					//e.g. there is more data than just the command
+					$linePos    = strpos($line, $strCmd);
+					
+					if ($cmdPos !== false || $linePos !== false) {
+						//this line holds part or all of the command
+						$found		= true;
+						if ($cmdPos !== false) {
+							$strCmd		= substr($strCmd, ($cmdPos + strlen($line)));
+							if (strlen(trim($strCmd)) < 1) {
+								//we found all of the command, nothing but whitespace left
+								$lines		= array_slice($lines, ($lKey + 1));
+								break;
+							}
+							
+						} elseif ($linePos !== false) {
+							
+							//this line holds what remains of the command, the rest is data
+							//the rest of the line is data, if it was only whitespace, it would have been caught above
+							$lines[$lKey]	= substr($line, ($linePos + strlen($strCmd)));
+							$lines			= array_slice($lines, $lKey);
+							break;
+						}
+						
+					} elseif ($found === true) {
+						//we had part of the command but lost it before a match could be made
+						break;
+					}
+				}
+			}
+			$data	= implode("\n", $lines);
 		}
 		return $data;
 	}

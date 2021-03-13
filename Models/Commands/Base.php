@@ -131,6 +131,14 @@ abstract class Base
 	{
 		return $this->_data;
 	}
+	public function getParsedData()
+	{
+		return $this->parse();
+	}
+	public function getReturnData()
+	{
+		return $this->removeCommand();
+	}
 	public function setError($e)
 	{
 		$this->_error	= $e;
@@ -148,7 +156,7 @@ abstract class Base
 				if ($this->getIsDone() === false) {
 					usleep(10000); //this structure has to go
 				} elseif (is_object($this->_error) === false) {
-					return $this->parse();
+					return $this->getParsedData();
 				} elseif ($throw === true) {
 					throw $this->_error;
 				} else {

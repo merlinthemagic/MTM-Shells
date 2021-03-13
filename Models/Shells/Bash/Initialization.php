@@ -4,7 +4,6 @@ namespace MTM\Shells\Models\Shells\Bash;
 
 class Initialization extends Processing
 {
-	protected $_isInit=false;
 	protected $_regEx=null;
 	protected $_commitChars=null;
 	protected $_useSudo=false;
@@ -13,6 +12,7 @@ class Initialization extends Processing
 	protected $_phpShPid=null;
 	protected $_phpShName=null;
 	protected $_basePipes=null;
+	protected $_rwDir=null;
 
 	public function setSudo($bool)
 	{
@@ -24,6 +24,11 @@ class Initialization extends Processing
 			$this->_regEx	= "[" . uniqid("bash.", true) . "]";
 		}
 		return $this->_regEx;
+	}
+	public function getTempDirectory()
+	{
+		$this->initialize();
+		return $this->_rwDir;
 	}
 	protected function getCommit()
 	{
@@ -41,7 +46,7 @@ class Initialization extends Processing
 				
 				//set the prompt to a known value
 				$strCmd		= "PS1=\"".$this->getRegEx()."\"";
-				$regEx		= "(\n" . preg_quote($this->getRegEx()) .")";
+				$regEx		= "(".preg_quote($this->getRegEx()).")";
 				$this->getCmd($strCmd, $regEx)->get();
 				
 				//ssh connections will not inherit the terminal width of the parent.
@@ -49,7 +54,7 @@ class Initialization extends Processing
 				
 				//dont record a history for this session
 				$strCmd	= "unset HISTFILE";
-				$this->getCmd($strCmd)->get();			
+				$this->getCmd($strCmd)->get();
 	
 				if ($this->getParent() === null) {
 					//if there is no parent then this is the initial shell
@@ -172,7 +177,19 @@ class Initialization extends Processing
 
 					$this->getCmd($strCmd)->get();
 				}
-
+				
+				$tmpDirs	= array("/tmp/", "/dev/shm/");
+				foreach ($tmpDirs as $tmpDir) {
+					$strCmd	= "if [ -w \"".$tmpDir."\" ]; then echo \"isWrite\"; else echo \"noWrite\"; fi";
+					$data	= trim($this->getCmd($strCmd)->get());
+					if ($data == "isWrite") {
+						//change to return a shell enabled directory
+						$this->_rwDir	= \MTM\FS\Factories::getDirectories()->getDirectory($tmpDir);
+						break;
+					}
+				}
+				
+				
 				//reset the output so we have a clean beginning
 				$this->getPipes()->resetStdOut();
 				
