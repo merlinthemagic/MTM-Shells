@@ -179,6 +179,11 @@ class Initialization extends Processing
 				}
 				
 				$tmpDirs	= array("/tmp/", "/dev/shm/");
+				$strCmd		= "echo \$HOME";
+				$homeDir	= trim($this->getCmd($strCmd)->get());
+				if ($homeDir != "") {
+					$tmpDirs[]	= rtrim($homeDir, "/")."/";
+				}
 				foreach ($tmpDirs as $tmpDir) {
 					$strCmd	= "if [ -w \"".$tmpDir."\" ]; then echo \"isWrite\"; else echo \"noWrite\"; fi";
 					$data	= trim($this->getCmd($strCmd)->get());
@@ -188,8 +193,7 @@ class Initialization extends Processing
 						break;
 					}
 				}
-				
-				
+
 				//reset the output so we have a clean beginning
 				$this->getPipes()->resetStdOut();
 				
