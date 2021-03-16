@@ -7,6 +7,8 @@ class Actions extends Initialization
 	protected $_shellType="bash";
 	protected $_termHeight=null;
 	protected $_termWidth=null;
+	protected $_maxInput=null;
+	protected $_rwDir=null;
 	
 	public function getCmd($strCmd=null, $regExp=null, $timeout=null)
 	{
@@ -42,9 +44,9 @@ class Actions extends Initialization
 	public function getTerminalSize($refresh=true)
 	{
 		if (
-			$refresh === true ||
-			$this->_termHeight === null ||
-			$this->_termWidth === null
+			$refresh === true
+			|| $this->_termHeight === null
+			|| $this->_termWidth === null
 		) {
 			$strCmd	= "stty size";
 			$data	= $this->getCmd($strCmd)->get();
@@ -59,6 +61,45 @@ class Actions extends Initialization
 		$rObj->height	= $this->_termHeight;
 		$rObj->width	= $this->_termWidth;
 		return $rObj;
+	}
+	public function getTempDirectory()
+	{
+		if ($this->_rwDir === null) {
+			$tmpDirs	= array("/tmp/", "/dev/shm/");
+			$strCmd		= "echo \$HOME";
+			$homeDir	= trim($this->getCmd($strCmd)->get());
+			if ($homeDir != "") {
+				$tmpDirs[]	= rtrim($homeDir, "/")."/";
+			}
+			foreach ($tmpDirs as $tmpDir) {
+				$strCmd	= "if [ -w \"".$tmpDir."\" ]; then echo \"isWrite\"; else echo \"noWrite\"; fi";
+				$data	= trim($this->getCmd($strCmd)->get());
+				if ($data == "isWrite") {
+					$this->_rwDir	= \MTM\FS\Factories::getDirectories()->getDirectory($tmpDir);
+					break;
+				}
+			}
+			if ($this->_rwDir === null) {
+				throw new \Exception("Failed to get temp directory");
+			}
+		}
+		return $this->_rwDir;
+	}
+	public function getMaxInput($refresh=false)
+	{
+		if (
+			$refresh === true
+			|| $this->_maxInput === null
+		) {
+			$strCmd	= "getconf ARG_MAX";
+			$data	= $this->getCmd($strCmd)->get();
+			if (preg_match("/([0-9]+)/", $data, $raw) == 1) {
+				$this->_maxInput	= intval($raw[1]);
+			} else {
+				throw new \Exception("Failed to get max input length");
+			}
+		}
+		return $this->_maxInput;
 	}
 	public function getPipes()
 	{

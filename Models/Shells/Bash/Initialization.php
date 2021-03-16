@@ -12,7 +12,6 @@ class Initialization extends Processing
 	protected $_phpShPid=null;
 	protected $_phpShName=null;
 	protected $_basePipes=null;
-	protected $_rwDir=null;
 
 	public function setSudo($bool)
 	{
@@ -24,11 +23,6 @@ class Initialization extends Processing
 			$this->_regEx	= "[" . uniqid("bash.", true) . "]";
 		}
 		return $this->_regEx;
-	}
-	public function getTempDirectory()
-	{
-		$this->initialize();
-		return $this->_rwDir;
 	}
 	protected function getCommit()
 	{
@@ -146,52 +140,33 @@ class Initialization extends Processing
 					//sleep another cycle, that way processes have a chance to shutdown normally
 					//we dont know if the timer is on 0 when the lock file is removed
 					//the FS factory seems to destroy the lock before he shell is down
-					$strCmd		.= " sleep ".$loopSleep."s &&";
-					
-					//check the PHP sh script is still alive
-					$strCmd		.= " ".$killPath." -0 ".$this->_phpShPid." > /dev/null 2>&1 &&";
-					
-					//check the PHP sh pid process has the right name
-					$strCmd		.= " PHPNAME=\$( ".$psPath." -p ".$this->_phpShPid." -o comm= ) &&";
-					$strCmd		.= " [ \"\$PHPNAME\" == \"".$this->_phpShName."\" ]  &&";
-					
-					//check the Python spawn is still alive
-					$strCmd		.= " ".$killPath." -0 ".$this->_spawnPid." > /dev/null 2>&1 &&";
-					
-					//check the Python spawn pid process has the right name
-					$strCmd		.= " PYNAME=\$( ".$psPath." -p ".$this->_spawnPid." -o comm= ) &&";
-					$strCmd		.= " [ \"\$PYNAME\" == \"".$this->_spawnName."\" ]  &&";
+					$strCmd		.= " sleep ".$loopSleep."s ;";
 
-					//process is alive and confirmed to be ours
-					//NOTE: -SIGKILL does not work on CentOS7, must be numerical for some reason
-					$strCmd		.= " ".$killPath." -9 " . $this->_spawnPid . "; ";
+					//check the PHP sub process we spawned is is still alive
+					$strCmd		.= " ".$killPath." -0 ".$this->_phpShPid." > /dev/null 2>&1;";
+					$strCmd		.= " [ \$(echo \$?) == 0 ] &&";
+					$strCmd		.= " PHPNAME=\$( ".$psPath." -p ".$this->_phpShPid." -o comm= ) &&"; //check the PHP sh pid process has the right name
+					$strCmd		.= " [ \"\$PHPNAME\" == \"".$this->_phpShName."\" ] &&";
+					$strCmd		.= " ".$killPath." -9 " . $this->_phpShPid . ";";//php spawn is still alive, kill it
 					
-					//remove the work directory since we are issuing a kill, the process will not be able to clean up
-					$strCmd		.= " rm -rf ".$this->getPipes()->getLock()->getDirectory()->getPathAsString()."; ";
+					//check the Python sub process we spawned is is still alive
+					$strCmd		.= " ".$killPath." -0 ".$this->_spawnPid." > /dev/null 2>&1;";
+					$strCmd		.= " [ \$(echo \$?) == 0 ] &&";
+					$strCmd		.= " PYNAME=\$( ".$psPath." -p ".$this->_spawnPid." -o comm= ) &&"; //check the Python spawn pid process has the right name
+					$strCmd		.= " [ \"\$PYNAME\" == \"".$this->_spawnName."\" ] &&";
+					$strCmd		.= " ".$killPath." -9 " . $this->_spawnPid . ";";//process is alive and confirmed to be ours, -SIGKILL does not work on CentOS7, must be numerical for some reason
 					
-					//log
-					$strCmd		.= " echo \"Ended bash shell: ".$this->getPipes()->getLock()->getDirectory()->getName()."\" >> ".MTM_FS_TEMP_PATH."mtm-shells.log";
+					//check if the pipe dir is still here
+					$strCmd		.= " [ -d \"".$this->getPipes()->getLock()->getDirectory()->getPathAsString()."\" ] &&";
+					$strCmd		.= " rm -rf \"".$this->getPipes()->getLock()->getDirectory()->getPathAsString()."\"; ";
 					
+					//debug log
+// 					$strCmd		.= " echo \"Ended bash shell: ".$this->getPipes()->getLock()->getDirectory()->getName()."\" >> ".MTM_FS_TEMP_PATH."mtm-shells.log";
+
 					//we dont want output
 					$strCmd		.= " ' & ) > /dev/null 2>&1;";
 
 					$this->getCmd($strCmd)->get();
-				}
-				
-				$tmpDirs	= array("/tmp/", "/dev/shm/");
-				$strCmd		= "echo \$HOME";
-				$homeDir	= trim($this->getCmd($strCmd)->get());
-				if ($homeDir != "") {
-					$tmpDirs[]	= rtrim($homeDir, "/")."/";
-				}
-				foreach ($tmpDirs as $tmpDir) {
-					$strCmd	= "if [ -w \"".$tmpDir."\" ]; then echo \"isWrite\"; else echo \"noWrite\"; fi";
-					$data	= trim($this->getCmd($strCmd)->get());
-					if ($data == "isWrite") {
-						//change to return a shell enabled directory
-						$this->_rwDir	= \MTM\FS\Factories::getDirectories()->getDirectory($tmpDir);
-						break;
-					}
 				}
 
 				//reset the output so we have a clean beginning
