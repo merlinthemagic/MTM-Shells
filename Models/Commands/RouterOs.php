@@ -70,10 +70,11 @@ class RouterOs extends Base
 		//Command string removal from return
 		//cant be only whitespaces because we trim each line, we would likely
 		//find white spaces later in the return the result would be cutting out return data
-		$data	= $this->getData();
-		if ($this->getCmd() !== null && trim($this->getCmd()) != "") {
-
-			$strCmd		= $this->getCmd();
+		$data		= $this->getData();
+		$strCmd		= $this->getCmd();
+		if ($strCmd !== null && trim($strCmd) != "") {
+		
+			$lines		= explode("\n\r", $data);
 			$found		= false;
 			foreach ($lines as $lKey => $line) {
 				
