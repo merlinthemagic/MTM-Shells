@@ -41,7 +41,33 @@ class Initialization extends Processing
 				//set the prompt to a known value
 				$strCmd		= "PS1=\"".$this->getRegEx()."\"";
 				$regEx		= "(".preg_quote($this->getRegEx()).")";
-				$this->getCmd($strCmd, $regEx)->get();
+				
+				$rTries		= 10;
+				while (true) {
+					try {
+						$this->getCmd($strCmd, $regEx)->get();
+						break; //success
+					} catch (\Exception $e) {
+						switch ($e->getCode()) {
+							case 92987:
+								if ($rTries > 0) {
+									$rTries--;
+									//failed to write command to stdIn: Cannot add to a file, error opening for writing: /dev/shm/xxxxxxxxxx/stdIn
+									//system is a little busy and the pipe is not yet ready, just wait a little
+									usleep(100000);
+									break;
+								} else {
+									//fail
+									throw $e;
+								}
+							default:
+								throw $e;
+						}
+					}
+				}
+				
+				
+				
 				
 				//ssh connections will not inherit the terminal width of the parent.
 				$this->setTerminalSize(1000, 1000);

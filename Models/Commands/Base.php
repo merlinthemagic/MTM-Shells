@@ -163,6 +163,7 @@ abstract class Base
 					return $this->_data;
 				}
 			}
+			
 		} catch (\Exception $e) {
 			throw $e;
 		}
