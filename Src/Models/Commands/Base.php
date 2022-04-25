@@ -98,7 +98,7 @@ abstract class Base
 	}
 	public function setRunning()
 	{
-		//triggered by parent 
+		//triggered by parent
 		if ($this->_isRunning === false) {
 			$this->_isRunning	= true;
 			$this->_initTime	= \MTM\Utilities\Factories::getTime()->getMicroEpoch();
@@ -144,6 +144,10 @@ abstract class Base
 		$this->_error	= $e;
 		$this->setDone();
 		return $this;
+	}
+	public function getError()
+	{
+		return $this->_error;
 	}
 	public function get($throw=true)
 	{
