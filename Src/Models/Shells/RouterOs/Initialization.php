@@ -22,8 +22,9 @@ class Initialization extends Processing
 		$strCmd			= ":local MHIT \"\";";
 		$regChars		= "[a-zA-Z0-9\+\_\-\.\:\#\,]+";
 		$regEx			= "\[((".$regChars.")@(".$regChars."))\]\s+\>";
-		$data			= $this->getCmd($strCmd, $regEx)->get();
-		
+		$cmdObj			= $this->getCmd($strCmd, $regEx);
+		$cmdObj->get();
+		$data			= $cmdObj->getReturnData();
 		//prompt may carry some junk special characters back even with colors disabled, not sure why, might be a MT issue
 		$lines			= array_filter(explode("\n", $data));
 		foreach ($lines as $line) {

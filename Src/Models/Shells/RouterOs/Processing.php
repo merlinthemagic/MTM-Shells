@@ -30,22 +30,29 @@ class Processing extends Termination
 		//for unknown reasons the prompt is sometimes written more than once
 		//that means a command will be issued, but the reader will catch an old prompt and return
 		//either the previous data or more likely an empty return.
-		$tFact	= \MTM\Utilities\Factories::getTime();
-		$tTime	= ($tFact->getMicroEpoch() + ($timeout / 1000));
+		$tFact		= \MTM\Utilities\Factories::getTime();
+		$tTime		= ($tFact->getMicroEpoch() + ($timeout / 1000));
+		
+		//chop the total timeout into smaller chunks so we get at least a few tries
+		//provide at least 2500 ms to complete
+		$pTime	= ceil($timeout / 3); 
+		if ($pTime < 2500) {
+			$pTime	= $timeout;
+		}
+		
 		$i=0;
 		while (true) {
 			$i++;
 			$pattern	= uniqid("cleaner.", true);
 			$strCmd		= ":put \"" . $pattern . "\"";
 			$regEx		= "((".$pattern.")(.+?)(".preg_quote($this->getRegEx())."))";
-			$cmdObj		= $this->getCmd($strCmd, $regEx);
+			$cmdObj		= $this->getCmd($strCmd, $regEx, $pTime);
 			$cmdObj->exec()->get(false); //may timeout
 			if ($cmdObj->getError() === null) {
 				return;
 			} elseif ($tTime < $tFact->getMicroEpoch()) {
 				throw new \Exception("Failed to recover prompt");
 			} else {
-				
 				//wait for output to clear, sleep longer and longer or we just clog the pipe on slow connections
 				if ($i == 1) {
 					usleep(250000);
