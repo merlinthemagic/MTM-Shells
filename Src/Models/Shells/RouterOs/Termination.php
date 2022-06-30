@@ -54,6 +54,6 @@ class Termination extends \MTM\Shells\Models\Shells\Base
 	}
 	public function exceptHandler($e)
 	{
-		file_put_contents("/dev/shm/merlin.txt", __METHOD__ . " - " . print_r($e->getMessage(), true) . "\n", FILE_APPEND);
+// 		file_put_contents("/dev/shm/merlin.txt", __METHOD__ . " - " . print_r($e->getMessage(), true) . "\n", FILE_APPEND);
 	}
 }
