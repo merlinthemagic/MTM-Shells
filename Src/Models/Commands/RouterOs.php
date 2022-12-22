@@ -1,5 +1,5 @@
 <?php
-//© 2019 Martin Peter Madsen
+//ï¿½ 2019 Martin Peter Madsen
 namespace MTM\Shells\Models\Commands;
 
 class RouterOs extends Base
@@ -23,7 +23,7 @@ class RouterOs extends Base
 					if ($delimPos !== false) {
 						//this line holds all of the command
 						$regEx	= $this->getParent()->getRegEx();
-						if (preg_quote($regEx) === $this->getDelimitor()) {
+						if ($regEx !== null && preg_quote($regEx) === $this->getDelimitor()) {
 							//exclude system delimitors
 							$line		= substr($line, 0, $delimPos);
 						} else {

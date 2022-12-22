@@ -1,5 +1,5 @@
 <?php
-//© 2019 Martin Peter Madsen
+//ï¿½ 2019 Martin Peter Madsen
 namespace MTM\Shells\Models\Shells\Bash;
 
 class Initialization extends Processing
@@ -91,6 +91,12 @@ class Initialization extends Processing
 					//index 7 only exists when $this->_useSudo === true, then it is the php shell execution
 					if ($this->_useSudo === false) {
 						if (count($procDatas) === 6) {
+							$this->_spawnName	= trim($procDatas[2]);
+							$this->_spawnPid	= trim($procDatas[3]);
+							$this->_phpShName	= trim($procDatas[4]);
+							$this->_phpShPid	= trim($procDatas[5]);
+						} elseif (count($procDatas) === 7) {
+							//seen on PHP 8 on raspberry pi
 							$this->_spawnName	= trim($procDatas[2]);
 							$this->_spawnPid	= trim($procDatas[3]);
 							$this->_phpShName	= trim($procDatas[4]);
@@ -229,7 +235,10 @@ class Initialization extends Processing
 						//e.g. Centos8 does not ship with python
 						//dnf install python3 -y
 						//ln -s /usr/bin/python3 /usr/bin/python
-						throw new \Exception("Missing Python application");
+						$pythonPath		= $osTool->getExecutablePath("python3");
+						if ($pythonPath === false) {
+							throw new \Exception("Missing Python application");
+						}
 					}
 					
 					if ($this->_useSudo === true) {
@@ -346,9 +355,10 @@ class Initialization extends Processing
 						$stdInOk	= false;
 						while ($eTime > time()) {
 							
-							$stdErrData	= trim($stdErr->getContent());
+							$stdErrData	= $stdErr->getContent();
 							$stdInOk	= $stdIn->getExists();
 							if ($stdErrData != "") {
+								$stdErrData		= trim($stdErrData);
 								break;
 							} elseif ($stdInOk === true) {
 								break;
