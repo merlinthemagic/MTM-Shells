@@ -356,11 +356,12 @@ class Initialization extends Processing
 						while ($eTime > time()) {
 							
 							$stdErrData	= $stdErr->getContent();
-							$stdInOk	= $stdIn->getExists();
 							if ($stdErrData != "") {
 								$stdErrData		= trim($stdErrData);
 								break;
-							} elseif ($stdInOk === true) {
+							}
+							$stdInOk	= $stdIn->getExists();
+							if ($stdInOk === true) {
 								break;
 							} else {
 								usleep(10000);

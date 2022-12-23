@@ -1,8 +1,8 @@
 <?php
-//© 2019 Martin Peter Madsen
+//ï¿½ 2019 Martin Peter Madsen
 namespace MTM\Shells\Factories;
 
 class Base
 {
-	protected $_cStore=array();
+	protected $_s=array();
 }

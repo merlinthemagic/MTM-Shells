@@ -1,5 +1,5 @@
 <?php
-//© 2019 Martin Peter Madsen
+//ï¿½ 2019 Martin Peter Madsen
 namespace MTM\Shells;
 
 class Factories
@@ -12,6 +12,13 @@ class Factories
 	{
 		if (array_key_exists(__FUNCTION__, self::$_cStore) === false) {
 			self::$_cStore[__FUNCTION__]	= new \MTM\Shells\Factories\Shells();
+		}
+		return self::$_cStore[__FUNCTION__];
+	}
+	public static function getFiles()
+	{
+		if (array_key_exists(__FUNCTION__, self::$_cStore) === false) {
+			self::$_cStore[__FUNCTION__]	= new \MTM\Shells\Factories\Files();
 		}
 		return self::$_cStore[__FUNCTION__];
 	}

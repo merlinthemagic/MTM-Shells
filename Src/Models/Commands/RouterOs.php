@@ -45,7 +45,7 @@ class RouterOs extends Base
 					unset($lines[$lKey]);
 				}
 			}
-			$data	= implode("\n", array_reverse($lines));
+			$data	= str_replace("\r", "", implode("\n", array_reverse($lines)));
 		}
 
 		return $data;
