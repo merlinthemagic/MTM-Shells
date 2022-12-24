@@ -26,6 +26,9 @@ abstract class PasswordCopy extends Base
 				"Permission denied"									=> "error", //tested: Permission denied (password).
 				"Connection closed by remote host"					=> "error", //not tested
 				"Connection refused"								=> "error", //not tested
+				"File (.+?) not found\."							=> "error", //TODO: logged in, need better error to bubble
+				"No such file or directory"							=> "error", //TODO: logged in, clarify if it is src or dst that is missing
+				"Connected to"										=> "success", //logged in, password was empty string
 				$ipObj->getAsString("std", false) . "'s password:"	=> "pwAuth",
 		);
 		$regEx	= "(" . implode("|", array_keys($regExs)) . ")";
@@ -50,18 +53,23 @@ abstract class PasswordCopy extends Base
 				break;
 			}
 		}
-		if ($rType == "pwAuth") {
+		if ($rType == "pwAuth" || $rType == "success") {
 			//login, add more regex options
 			//cannot include these above as it will match before the pwAuth
 			//most specific fail senario must come before success else we match on the exit
+			unset($regExs["Connected to"]); //remove the success option so we dont match on it again
+			
+			if ($rType == "pwAuth") {
+				$strCmd			= $password;
+			} elseif ($rType == "success") {
+				$strCmd			= null;
+			}
+			
 			$regExs2	= array(
-					"No such file or directory"				=> "error",
-					"No such file or directory"				=> "error",
 					preg_quote($ctrlObj->getRegEx())		=> "completed"
 			);
-			
+
 			$regExs			= array_merge($regExs, $regExs2);
-			$strCmd			= $password;
 			$regEx			= "(" . implode("|", array_keys($regExs)) . ")";
 			$cmdObj			= $ctrlObj->getCmd($strCmd, $regEx, $timeout)->setTimeout(2592000000); //30 day timeout enough?
 
