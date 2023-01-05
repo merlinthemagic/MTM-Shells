@@ -1,5 +1,5 @@
 <?php
-//© 2019 Martin Peter Madsen
+//ï¿½ 2019 Martin Peter Madsen
 namespace MTM\Shells\Models\Commands;
 
 class Bash extends Base
@@ -44,8 +44,10 @@ class Bash extends Base
 	{
 		//Command string removal from return
 		$data	= $this->getData();
-		if ($this->getCmd() !== null) {
+		$strCmd	= $this->getCmd();
+		if ($strCmd !== null) {
 		
+			$strCmd	= trim($strCmd);
 			$lines	= explode("\n", $data);
 			$lCount	= count($lines);
 			if ($lCount > 0) {
@@ -101,7 +103,11 @@ class Bash extends Base
 					}
 					$cmdLine	.= trim($line);
 					$curLen		= strlen($cmdLine);
-					if ($curLen == ($cmdLen + strpos($cmdLine, $this->getCmd()))) {
+					$cmdPos		= $cmdLen;
+					if ($strCmd !== "") {
+						$cmdPos		+= strpos($cmdLine, $strCmd);
+					}
+					if ($curLen == $cmdPos) {
 						//found the command, delete the lines that has the command and anything before it
 						$lines		= array_slice($lines, ($lKey + 1));
 						break;
