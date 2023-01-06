@@ -1,5 +1,5 @@
 <?php
-//© 2019 Martin Peter Madsen
+//ï¿½ 2019 Martin Peter Madsen
 namespace MTM\Shells\Models\Shells\RouterOs;
 
 class Processing extends Termination
@@ -35,7 +35,7 @@ class Processing extends Termination
 		
 		//chop the total timeout into smaller chunks so we get at least a few tries
 		//provide at least 2500 ms to complete
-		$pTime	= ceil($timeout / 3); 
+		$pTime	= ceil($timeout / 3);
 		if ($pTime < 2500) {
 			$pTime	= $timeout;
 		}
@@ -44,10 +44,11 @@ class Processing extends Termination
 		while (true) {
 			$i++;
 			$pattern	= uniqid("cleaner.", true);
-			$strCmd		= ":put \"" . $pattern . "\"";
-			$regEx		= "((".$pattern.")(.+?)(".preg_quote($this->getRegEx())."))";
+			$strCmd		= ":put \"" . $pattern . "\";";
+			$regEx		= "(".$pattern.")([B9\r\n\e\[]+?)(".preg_quote($this->getRegEx()).")";
 			$cmdObj		= $this->getCmd($strCmd, $regEx, $pTime);
 			$cmdObj->exec()->get(false); //may timeout
+
 			if ($cmdObj->getError() === null) {
 				return;
 			} elseif ($tTime < $tFact->getMicroEpoch()) {

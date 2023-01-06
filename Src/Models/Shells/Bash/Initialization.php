@@ -31,7 +31,7 @@ class Initialization extends Processing
 		}
 		return $this->_commitChars;
 	}
-	protected function initialize()
+	public function initialize()
 	{
 		if ($this->_isInit === false) {
 			$this->_isInit	= null;

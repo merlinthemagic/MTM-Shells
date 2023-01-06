@@ -48,14 +48,15 @@ class Processing extends Termination
 			
 			$data	= $this->getPipes()->read();
 			if ($data != "") {
-				
+
 				$cmdObj->addData($data);
 				//we handle newlines as well with modifier = /s
 				//src: https://php.net/manual/en/reference.pcre.pattern.modifiers.php
 				if (
 					$cmdObj->getDelimitor() != ""
-					&& preg_match("/".$cmdObj->getDelimitor()."/s", $cmdObj->getData()) === 1 //too costly to check return data on every read, just do raw for starters
-					&& preg_match("/".$cmdObj->getDelimitor()."/s", $cmdObj->getReturnData()) === 1 
+					&& preg_match("/(.*)?(".$cmdObj->getDelimitor().")/s", $cmdObj->getData(), $raw) === 1 //too costly to check return data on every read, just do raw for starters
+					&& (strlen(trim($raw[1])) > 0 || $cmdObj->getCmd() == "") === true //some shells (routeros) prints the prompt again and again. This triggers a false hit by the delimiter before we have a return. anything but an empty command should yeild some return. Maybe all read logic needs to move to the command class  
+					&& preg_match("/".$cmdObj->getDelimitor()."/s", $cmdObj->getReturnData()) === 1
 				) {
 					$cmdObj->setDone();
 				}

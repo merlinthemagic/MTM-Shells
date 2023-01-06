@@ -11,7 +11,7 @@ class Bash extends Base
 		$lCount	= count($lines);
 		if ($lCount > 0) {
 			//Locate the delimitor in the return
-			if ($this->getDelimitor() !== null) {
+			if ($this->getDelimitor() != "") {
 				//its faster to start from the bottom of the return
 				$lines	= array_reverse($lines);
 				foreach ($lines as $lKey => $line) {

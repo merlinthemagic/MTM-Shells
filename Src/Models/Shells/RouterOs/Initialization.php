@@ -1,5 +1,5 @@
 <?php
-//© 2019 Martin Peter Madsen
+//ï¿½ 2019 Martin Peter Madsen
 namespace MTM\Shells\Models\Shells\RouterOs;
 
 class Initialization extends Processing
@@ -28,8 +28,8 @@ class Initialization extends Processing
 		//prompt may carry some junk special characters back even with colors disabled, not sure why, might be a MT issue
 		$lines			= array_filter(explode("\n", $data));
 		foreach ($lines as $line) {
-			$line	= trim($line);
-			if (preg_match("/(\[((".$regChars.")@(".$regChars."))]\s+\>)/", $line, $raw) == 1) {
+			$tline	= trim($line);
+			if (preg_match("/(\[((".$regChars.")@(".$regChars."))]\s+\>)/", $tline, $raw) == 1) {
 				$this->_regEx	= $raw[1];
 				break;
 			}
@@ -43,7 +43,7 @@ class Initialization extends Processing
 		}
 		return $this->_commitChars;
 	}
-	protected function initialize()
+	public function initialize()
 	{
 		if ($this->_isInit === false) {
 			$this->_isInit	= null;
