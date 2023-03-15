@@ -1,5 +1,5 @@
 <?php
-//© 2019 Martin Peter Madsen
+//ï¿½ 2019 Martin Peter Madsen
 namespace MTM\Shells\Models\Shells\Bash;
 
 class Termination extends \MTM\Shells\Models\Shells\Base
@@ -35,10 +35,12 @@ class Termination extends \MTM\Shells\Models\Shells\Base
 		} else {
 			$exists	= $this->getBasePipes()->getStdOut()->getExists();
 			if ($exists === true) {
-				return false;
-			} else {
-				return true;
+				$exists	= $this->getBasePipes()->getStdIn()->getExists();
+				if ($exists === true) {
+					return false;
+				}
 			}
+			return true;
 		}
 	}
 	public function terminate()

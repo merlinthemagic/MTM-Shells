@@ -17,12 +17,20 @@ class Processing extends Termination
 	public function write($cmdObj)
 	{
 		//cannot be a base shell, ROS does not run PHP :)
-		$this->getParent()->write($cmdObj);
+		if ($this->isInit() !== false) {
+			$this->getParent()->write($cmdObj);
+		} else {
+			throw new \Exception("Cannot write Not initialized");
+		}
 	}
 	public function read($cmdObj)
 	{
 		//cannot be a base shell, ROS does not run PHP :)
-		$this->getParent()->read($cmdObj);
+		if ($this->isInit() !== false) {
+			$this->getParent()->read($cmdObj);
+		} else {
+			throw new \Exception("Cannot read Not initialized");
+		}
 	}
 	public function resetPrompt($timeout=10000)
 	{
