@@ -61,7 +61,8 @@ abstract class PasswordCopy extends Base
 			
 			if ($rType == "pwAuth") {
 				$strCmd			= $password;
-				$strCmd			= null;
+			} else {
+				$strCmd			= false;
 			}
 			
 			$regExs2	= array(
