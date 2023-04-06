@@ -360,8 +360,13 @@ class Initialization extends Processing
 								$stdErrData		= trim($stdErrData);
 								break;
 							}
-							$stdInOk	= $stdIn->getExists();
-							if ($stdInOk === true) {
+							
+							//simply checking if the file exists is not enough
+							//many exceptions are caused by the stdin pipe not being ready to accept data
+							$stdInFp		= @fopen($stdIn->getPathAsString(), "an");
+							if (is_resource($stdInFp) === true) {
+								fclose($stdInFp);
+								$stdInOk	= true;
 								break;
 							} else {
 								usleep(10000);
