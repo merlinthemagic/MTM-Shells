@@ -4,6 +4,21 @@ namespace MTM\Shells\Models\Commands;
 
 class RouterOs extends Base
 {
+	private function debugHelper()
+	{
+		if (strpos($this->getCmd(), "/system/package/update/check-for-updates") !== false) {
+
+			echo "\n <code><pre> \nClass:  ".__CLASS__." \nMethod:  ".__FUNCTION__. "  \n";
+			//var_dump(count($lines));
+			echo "\n 2222 \n";
+			print_r($lines);
+			echo "\n 3333 \n";
+			print_r($this->removeCommand(false));
+			echo "\n ".time()."</pre></code> \n ";
+			die();
+		}
+		
+	}
 	protected function checkData()
 	{
 		//we handle newlines as well with modifier = /s
@@ -26,44 +41,33 @@ class RouterOs extends Base
 			}
 		}
 	}
-	
 	protected function parse()
 	{
 		if ($this->getDelimitor() != "" && $this->getError() === null) {
+			$fDelim	= null;
 			$lines	= array_reverse($this->removeCommand(false));
-			foreach ($lines as $lKey => $line) {
-				if (substr($line, 0, 6) == "[9999B") {
+			foreach ($lines as $lId => $line) {
+				if (strpos($line, "[9999B") === 0) {
 					//i think its part of the VT100 ctrl sequence, VT100 because that is the bash base terminal
 					//src: https://www.gnu.org/software/screen/manual/html_node/Control-Sequences.html
-					$line		= substr($line, 6);
+					$line	= substr($line, 6);
 				}
 				if (preg_match("/(.*)?(".$this->getDelimitor().")/s", $line, $raw) === 1) {
-					$raw			= array_values(array_filter($raw));
-					$delimPos		= strpos($line, $raw[1]);
-					if ($delimPos !== false) {
-						//this line holds all of the command
-						$regEx	= $this->getParent()->getRegEx();
-						if ($regEx !== null && preg_quote($regEx) === $this->getDelimitor()) {
-							//exclude system delimitors
-							$line		= substr($line, 0, $delimPos);
-						} else {
-							//include custom delimitors
-							$line		= substr($line, 0, (1+ $delimPos + strlen($raw[1])));
-						}
-						
-						if (strlen(trim($line)) < 1) {
-							//we found all of the command, nothing but whitespace left
-							$lines			= array_slice($lines, ($lKey + 1));
-						} else {
-							$lines			= array_slice($lines, $lKey);
-							$lines[$lKey]	= $line;
-						}
-						break;
+					if (trim($raw[1]) === "") {
+						$lines[$lId]	= "";
+					} else {
+						$lines[$lId]	= $raw[1];
 					}
+					$fDelim	= $lId;
 					
-				} else {
-					unset($lines[$lKey]);
+				} elseif ($fDelim !== null) {
+					//we found the delimitor and this next line does not have another delimitor
+					//time to stop
+					break;
 				}
+			}
+			if ($fDelim !== null) {
+				$lines	= array_slice($lines, ($fDelim + 1));
 			}
 			return implode("\n", array_reverse($lines));
 			
@@ -86,10 +90,10 @@ class RouterOs extends Base
 					if (strlen(trim($line)) > 0) {
 						array_unshift($lines, $line);
 					}
-					if (array_key_exists(0, $lines) === true && strpos($lines[0], "[K\n") === 0) {
+					if (array_key_exists(0, $lines) === true && strpos($lines[0], "[K") === 0) {
 						//in v6 each new command char results in a new line + break + "[K" + $new char
 						//dont trim anything else. If we do a blanket left trim we lose more than the command
-						$lines[0]	= substr($lines[0], 3);
+						$lines[0]	= substr($lines[0], 2);
 					}
 					break;
 				}
@@ -127,20 +131,21 @@ class RouterOs extends Base
 	}
 	protected function getLines()
 	{
+		$rData		= array();
 		$lines		= explode("\x1B", $this->getData());
 		foreach ($lines as $lId => $line) {
 			$output		= "";
 			foreach (str_split($line, 1) as $chr) {
 				$ord	= ord($chr);
-				if (($ord > 31 && $ord < 127) || $ord === 10) {
+				if ($ord > 31 && $ord < 127) {
 					$output		.= $chr;
-				} elseif ($ord === 13) {
-					//relace \r with newline
-					$output		.= "\n";
+				} elseif ($ord === 10 || $ord === 13) {
+					$rData[]	= $output;
+					$output		= "";
 				}
 			}
-			$lines[$lId]	= $output;
+			$rData[]	= $output;
 		}
-		return $lines;
+		return $rData;
 	}
 }
