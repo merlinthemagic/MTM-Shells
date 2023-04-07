@@ -1,5 +1,5 @@
 <?php
-//© 2019 Martin Peter Madsen
+//ï¿½ 2019 Martin Peter Madsen
 namespace MTM\Shells\Models\Commands;
 
 abstract class Base
@@ -157,6 +157,7 @@ abstract class Base
 			while(true) {
 				
 				$this->getParent()->read($this);
+				$this->checkData();
 				if ($this->getIsDone() === false) {
 					usleep(10000); //this structure has to go
 				} elseif (is_object($this->_error) === false) {

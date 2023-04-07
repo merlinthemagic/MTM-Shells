@@ -4,6 +4,26 @@ namespace MTM\Shells\Models\Commands;
 
 class Bash extends Base
 {
+	protected function checkData()
+	{
+		//we handle newlines as well with modifier = /s
+		//src: https://php.net/manual/en/reference.pcre.pattern.modifiers.php
+		if (
+			$this->getDelimitor() != ""
+			&& preg_match("/(.*)?(".$this->getDelimitor().")/s", $this->getData(), $raw) === 1 //too costly to check return data on every read, just do raw for starters
+			&& preg_match("/".$this->getDelimitor()."/s", $this->getReturnData()) === 1
+		) {
+			$this->setDone();
+		}
+		if ($this->getIsDone() === false && $this->getRunTime() > $this->getTimeout()) {
+			if ($this->getDelimitor() == "") {
+				//we wanted to read until time ran out
+				$this->setDone();
+			} else {
+				$this->setError(new \Exception("Read timeout"));
+			}
+		}
+	}
 	protected function parse()
 	{
 		$data	= $this->removeCommand();
