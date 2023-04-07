@@ -18,7 +18,7 @@ abstract class Base
 	protected $_timeout=25000;
 	protected $_data="";
 	protected $_error=null;
-	
+
 	public function getGuid()
 	{
 		if ($this->_guid === null) {
@@ -92,8 +92,11 @@ abstract class Base
 			return 0;
 		}
 	}
-	public function getIsDone()
+	public function getIsDone($refresh=false)
 	{
+		if ($refresh === true) {
+			$this->checkData();
+		}
 		return $this->_isDone;
 	}
 	public function setRunning()
@@ -157,8 +160,7 @@ abstract class Base
 			while(true) {
 				
 				$this->getParent()->read($this);
-				$this->checkData();
-				if ($this->getIsDone() === false) {
+				if ($this->getIsDone(true) === false) {
 					usleep(10000); //this structure has to go
 				} elseif (is_object($this->_error) === false) {
 					return $this->getParsedData();

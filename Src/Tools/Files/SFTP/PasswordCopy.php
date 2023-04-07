@@ -83,7 +83,7 @@ abstract class PasswordCopy extends Base
 			$cmdObj->exec();
 			while(true) {
 				$ctrlObj->read($cmdObj);
-				if ($cmdObj->getIsDone() === false) {
+				if ($cmdObj->getIsDone(true) === false) {
 					
 					usleep($mSleep); //dont redline the CPU
 					$curHash		= hash("sha256", $cmdObj->getData()); //file name, transfer rate lots can change

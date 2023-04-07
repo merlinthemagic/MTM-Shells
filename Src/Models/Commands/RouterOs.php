@@ -17,7 +17,6 @@ class RouterOs extends Base
 			echo "\n ".time()."</pre></code> \n ";
 			die();
 		}
-		
 	}
 	protected function checkData()
 	{
