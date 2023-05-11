@@ -55,7 +55,7 @@ class Processing extends Termination
 			$strCmd		= ":put \"" . $pattern . "\";";
 			$regEx		= "(".$pattern.")([B9\r\n\e\[]+?)(".preg_quote($this->getRegEx()).")";
 			$cmdObj		= $this->getCmd($strCmd, $regEx, $pTime);
-			$cmdObj->exec()->get(false); //may timeout
+			$cmdObj->get(false); //may timeout
 
 			if ($cmdObj->getError() === null) {
 				return;
