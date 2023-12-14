@@ -234,7 +234,8 @@ class Initialization extends Processing
 					} elseif ($pythonPath === false) {
 						//e.g. Centos8 does not ship with python
 						//dnf install python3 -y
-						//ln -s /usr/bin/python3 /usr/bin/python
+						//rm -rf /usr/bin/python; ln -s /usr/bin/python3 /usr/bin/python
+						
 						$pythonPath		= $osTool->getExecutablePath("python3");
 						if ($pythonPath === false) {
 							throw new \Exception("Missing Python application");
@@ -312,7 +313,7 @@ class Initialization extends Processing
 					
 					//set the width of the environment
 					$strCmd				.= " os.environ['COLUMNS'] = '".$width."';";
-					
+										
 					//spawn bash as the new process
 					$strCmd				.= " pty.spawn(['" . $bashPath . "']);";
 
@@ -374,7 +375,15 @@ class Initialization extends Processing
 						}
 						
 						if ($stdErrData != "") {
-							throw new \Exception("Failed to create shell. Error: " . $stdErrData);
+							
+							if (strpos("SyntaxError: Non-ASCII character", $stdErrData) !== false) {
+								//need to deal with the environment for python 2
+								//cannot figure out how to force utf-8, which is the standard on python3
+								throw new \Exception("Failed to create shell. Please consider using python3. Error: '".$stdErrData."'");
+							} else {
+								throw new \Exception("Failed to create shell. Error: '".$stdErrData."'");
+							}
+							
 						} elseif ($stdInOk !== true) {
 							throw new \Exception("stdIn was never created");
 						}
