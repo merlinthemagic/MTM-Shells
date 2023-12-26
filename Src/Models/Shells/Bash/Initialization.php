@@ -225,7 +225,7 @@ class Initialization extends Processing
 					//get exe paths
 					$killPath		= $osTool->getExecutablePath("kill");
 					$bashPath		= $osTool->getExecutablePath("bash");
-					$pythonPath		= $osTool->getExecutablePath("python");
+					$pythonPath		= $osTool->getExecutablePath("python3"); //prefer python3
 					
 					if ($killPath === false) {
 						throw new \Exception("Missing Kill application");
@@ -236,7 +236,7 @@ class Initialization extends Processing
 						//dnf install python3 -y
 						//rm -rf /usr/bin/python; ln -s /usr/bin/python3 /usr/bin/python
 						
-						$pythonPath		= $osTool->getExecutablePath("python3");
+						$pythonPath		= $osTool->getExecutablePath("python");
 						if ($pythonPath === false) {
 							throw new \Exception("Missing Python application");
 						}

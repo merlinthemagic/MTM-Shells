@@ -20,10 +20,10 @@ abstract class PasswordCopy extends Base
 		$strCmd	.= " -o StrictHostKeyChecking=no";
 		$strCmd	.= " -o GSSAPIAuthentication=no";
 		$strCmd	.= " -P " . $port;
-		$strCmd	.= " -r '".$srcDir->getPathAsString()."'";
+		$strCmd	.= " -r \"".$srcDir->getPathAsString().".\""; //the dot at the end is required to only copy the content of the dir and not the dir itself
 		$strCmd	.= " ".$userName."@".$ipObj->getAsString("std", false);
-		$strCmd	.= ":'" . $dstDir->getPathAsString()."'";
-		
+		$strCmd	.= ":\"" . $dstDir->getPathAsString()."\"";
+
 		$regExs	= array(
 				"No route to host"									=> "error", //not tested
 				"Could not resolve hostname"						=> "error", //not tested
