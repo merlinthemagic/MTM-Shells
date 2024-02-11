@@ -10,37 +10,37 @@ class RouterOs extends Base
 	{
 		//we handle newlines as well with modifier = /s
 		//src: https://php.net/manual/en/reference.pcre.pattern.modifiers.php
-// 		if (
-// 			$this->getDelimitor() != ""
-// 			&& preg_match("/(.*)?(".$this->getDelimitor().")/s", $this->getData()) === 1 //too costly to check return data on every read, just do raw for starters
-// 			&& $this->getCmdFound() === true
-// 			&& preg_match("/".$this->getDelimitor()."/s", $this->getReturnData()) === 1
-// 		) {
-// 			$this->setDone();
-// 		}
-
-		if ($this->getDelimitor() != "") {
-			
-			//we just want a hit, the order of the lines does not matter
-			//preg_match with /s becomes O(n^2) as the return data string grows
-			$found	= false;
-			$lines	= explode("\n", $this->getData());
-			foreach ($lines as $lId => $line) {
-				if ($this->_checkLine <= $lId) {
-					if (preg_match("/(.*)?(".$this->getDelimitor().")/", $line) === 1) {
-						$found	= true;
-						break;
-					}
-				}
-			}
-			if ($found === false && $lId > 0) {
-				$this->_checkLine	= ($lId - 1);
-			} elseif ($found === true) {
-				if (preg_match("/".$this->getDelimitor()."/s", $this->getReturnData()) === 1) {
-					$this->setDone();
-				}
-			}
+		if (
+			$this->getDelimitor() != ""
+			&& preg_match("/(.*)?(".$this->getDelimitor().")/s", $this->getData()) === 1 //too costly to check return data on every read, just do raw for starters
+			&& $this->getCmdFound() === true
+			&& preg_match("/".$this->getDelimitor()."/s", $this->getReturnData()) === 1
+		) {
+			$this->setDone();
 		}
+
+// 		if ($this->getDelimitor() != "") {
+			
+// 			//we just want a hit, the order of the lines does not matter
+// 			//preg_match with /s becomes O(n^2) as the return data string grows
+// 			$found	= false;
+// 			$lines	= explode("\n", $this->getData());
+// 			foreach ($lines as $lId => $line) {
+// 				if ($this->_checkLine <= $lId) {
+// 					if (preg_match("/(.*)?(".$this->getDelimitor().")/", $line) === 1) {
+// 						$found	= true;
+// 						break;
+// 					}
+// 				}
+// 			}
+// 			if ($found === false && $lId > 0) {
+// 				$this->_checkLine	= ($lId - 1);
+// 			} elseif ($found === true) {
+// 				if (preg_match("/".$this->getDelimitor()."/s", $this->getReturnData()) === 1) {
+// 					$this->setDone();
+// 				}
+// 			}
+// 		}
 		
 		if ($this->getIsDone() === false && $this->getRunTime() > $this->getTimeout()) {
 			if ($this->getDelimitor() == "") {

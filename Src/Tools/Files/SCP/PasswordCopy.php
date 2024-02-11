@@ -70,10 +70,10 @@ abstract class PasswordCopy extends Base
 			}
 			
 			$regExs2	= array(
-					"(No such file or directory)"					=> "error",
-					"(scp\: failed to upload directory)"			=> "error",
-					"(scp error\:(\.+)\: No space left on device)"	=> "error",
-					"(".preg_quote($ctrlObj->getRegEx()).")"		=> "completed"
+					"No such file or directory"						=> "error",
+					"scp\: failed to upload directory"				=> "error",
+					"scp error\:(\.+)\: No space left on device"	=> "error",
+					preg_quote($ctrlObj->getRegEx())				=> "completed"
 			);
 			
 			$regExs			= array_merge($regExs, $regExs2);
@@ -110,7 +110,7 @@ abstract class PasswordCopy extends Base
 					//completed
 					$data	= $cmdObj->getData();
 					foreach ($regExs as $regEx => $type) {
-						if (preg_match("/".$regEx."/", $data, $raw) === 1) {
+						if (preg_match("/(".$regEx.")/", $data, $raw) === 1) {
 							$rValue	= $raw[1];
 							$rType	= $type;
 							break;
