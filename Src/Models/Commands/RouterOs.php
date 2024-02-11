@@ -4,31 +4,42 @@ namespace MTM\Shells\Models\Commands;
 
 class RouterOs extends Base
 {
-	private function debugHelper()
-	{
-		if (strpos($this->getCmd(), "/system/package/update/check-for-updates") !== false) {
-
-			echo "\n <code><pre> \nClass:  ".__CLASS__." \nMethod:  ".__FUNCTION__. "  \n";
-			//var_dump(count($lines));
-			echo "\n 2222 \n";
-			print_r($lines);
-			echo "\n 3333 \n";
-			print_r($this->removeCommand(false));
-			echo "\n ".time()."</pre></code> \n ";
-			die();
-		}
-	}
+	protected $_checkLine=0;
+	
 	protected function checkData()
 	{
 		//we handle newlines as well with modifier = /s
 		//src: https://php.net/manual/en/reference.pcre.pattern.modifiers.php
-		if (
-			$this->getDelimitor() != ""
-			&& preg_match("/(.*)?(".$this->getDelimitor().")/s", $this->getData(), $raw) === 1 //too costly to check return data on every read, just do raw for starters
-			&& $this->getCmdFound() === true
-			&& preg_match("/".$this->getDelimitor()."/s", $this->getReturnData()) === 1
-		) {
-			$this->setDone();
+// 		if (
+// 			$this->getDelimitor() != ""
+// 			&& preg_match("/(.*)?(".$this->getDelimitor().")/s", $this->getData()) === 1 //too costly to check return data on every read, just do raw for starters
+// 			&& $this->getCmdFound() === true
+// 			&& preg_match("/".$this->getDelimitor()."/s", $this->getReturnData()) === 1
+// 		) {
+// 			$this->setDone();
+// 		}
+
+		if ($this->getDelimitor() != "") {
+			
+			//we just want a hit, the order of the lines does not matter
+			//preg_match with /s becomes O(n^2) as the return data string grows
+			$found	= false;
+			$lines	= explode("\n", $this->getData());
+			foreach ($lines as $lId => $line) {
+				if ($this->_checkLine <= $lId) {
+					if (preg_match("/(.*)?(".$this->getDelimitor().")/", $line) === 1) {
+						$found	= true;
+						break;
+					}
+				}
+			}
+			if ($found === false && $lId > 0) {
+				$this->_checkLine	= ($lId - 1);
+			} elseif ($found === true) {
+				if (preg_match("/".$this->getDelimitor()."/s", $this->getReturnData()) === 1) {
+					$this->setDone();
+				}
+			}
 		}
 		
 		if ($this->getIsDone() === false && $this->getRunTime() > $this->getTimeout()) {
@@ -36,7 +47,7 @@ class RouterOs extends Base
 				//we wanted to read until time ran out
 				$this->setDone();
 			} else {
-				$this->setError(new \Exception("Read timeout"));
+				$this->setError(new \Exception("RouterOS: Command read timeout", 1111));
 			}
 		}
 	}

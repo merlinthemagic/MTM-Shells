@@ -4,23 +4,38 @@ namespace MTM\Shells\Models\Commands;
 
 class Bash extends Base
 {
+	protected $_checkLine=0;
+	
 	protected function checkData()
 	{
-		//we handle newlines as well with modifier = /s
-		//src: https://php.net/manual/en/reference.pcre.pattern.modifiers.php
-		if (
-			$this->getDelimitor() != ""
-			&& preg_match("/(.*)?(".$this->getDelimitor().")/s", $this->getData(), $raw) === 1 //too costly to check return data on every read, just do raw for starters
-			&& preg_match("/".$this->getDelimitor()."/s", $this->getReturnData()) === 1
-		) {
-			$this->setDone();
+		if ($this->getDelimitor() != "") {
+			
+			//we just want a hit, the order of the lines does not matter
+			//preg_match with /s becomes O(n^2) as the return data string grows
+			$found	= false;
+			$lines	= explode("\n", $this->getData());
+			foreach ($lines as $lId => $line) {
+				if ($this->_checkLine <= $lId) {
+					if (preg_match("/(.*)?(".$this->getDelimitor().")/", $line) === 1) {
+						$found	= true;
+						break;
+					}
+				}
+			}
+			if ($found === false && $lId > 0) {
+				$this->_checkLine	= ($lId - 1);
+			} elseif ($found === true) {
+				if (preg_match("/".$this->getDelimitor()."/s", $this->getReturnData()) === 1) {
+					$this->setDone();
+				}
+			}
 		}
 		if ($this->getIsDone() === false && $this->getRunTime() > $this->getTimeout()) {
 			if ($this->getDelimitor() == "") {
 				//we wanted to read until time ran out
 				$this->setDone();
 			} else {
-				$this->setError(new \Exception("Read timeout"));
+				$this->setError(new \Exception("Bash: Command read timeout", 1111));
 			}
 		}
 	}
@@ -66,7 +81,7 @@ class Bash extends Base
 		$data	= $this->getData();
 		$strCmd	= $this->getCmd();
 		if ($strCmd !== null) {
-		
+
 			$strCmd	= trim($strCmd);
 			$lines	= explode("\n", $data);
 			$lCount	= count($lines);
@@ -74,53 +89,58 @@ class Bash extends Base
 
 				//there could be junk left over on the terminal before the command was issued
 				//so allow a longer string to match before giving up
+				if ($this->getParent()->isInit() === true) {
+					$termWidth	= $this->getParent()->getTerminalSize(false)->width;
+					$pInit		= true;
+				} else {
+					$termWidth	= null;
+					$pInit		= false;
+				}
 				$cmdLen		= strlen(trim($this->getCmd()));
 				$maxLen		= ($cmdLen * 3);
 				$remainCmd	= $this->getCmd();
 				$cmdLine	= "";
 				foreach ($lines as $lKey => $line) {
 					
-					if ($this->getParent()->isInit() === true) {
+					if ($pInit === true && strlen($line) >= $termWidth) {
 						//locate terminal breaks in very long commands
-						$termWidth	= $this->getParent()->getTerminalSize(false)->width;
-						if (strlen($line) >= $termWidth) {
-							$oIndex		= 0;
-							$cIndex		= 0;
-							$nLine		= "";
-							$cChars		= str_split($remainCmd, 1);
-							$oChars		= str_split($line, 1);
-							foreach ($cChars as $cChar) {
-								if (array_key_exists($oIndex, $oChars) === true) {
-									$oChar	= $oChars[$oIndex];
-									if ($cChar !== $oChar) {
-										$found	= false;
-										for ($x=0; $x<4; $x++) {
-											$oIndex++;
-											$oChar	= $oChars[$oIndex];
-											if ($cChar === $oChar) {
-												$found	= true;
-												break;
-											}
-										}
-										if ($found === false) {
-											//we failed to find a terminal break
-											$nLine	= $line;
+						$oIndex		= 0;
+						$cIndex		= 0;
+						$nLine		= "";
+						$cChars		= str_split($remainCmd, 1);
+						$oChars		= str_split($line, 1);
+						foreach ($cChars as $cChar) {
+							if (array_key_exists($oIndex, $oChars) === true) {
+								$oChar	= $oChars[$oIndex];
+								if ($cChar !== $oChar) {
+									$found	= false;
+									for ($x=0; $x<4; $x++) {
+										$oIndex++;
+										$oChar	= $oChars[$oIndex];
+										if ($cChar === $oChar) {
+											$found	= true;
 											break;
 										}
 									}
-									
-								} else {
-									break;
+									if ($found === false) {
+										//we failed to find a terminal break
+										$nLine	= $line;
+										break;
+									}
 								}
-								$nLine	.= $oChar;
-								$oIndex++;
-								$cIndex++;
+								
+							} else {
+								break;
 							}
-							
-							$remainCmd	= substr($remainCmd, $cIndex);
-							$line		= $nLine;
+							$nLine	.= $oChar;
+							$oIndex++;
+							$cIndex++;
 						}
+						
+						$remainCmd	= substr($remainCmd, $cIndex);
+						$line		= $nLine;
 					}
+					
 					$cmdLine	.= trim($line);
 					$curLen		= strlen($cmdLine);
 					$cmdPos		= $cmdLen;
@@ -136,7 +156,6 @@ class Bash extends Base
 						break;
 					}
 				}
-
 				$data	= implode("\n", $lines);
 			}
 		}

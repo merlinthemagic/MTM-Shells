@@ -70,9 +70,10 @@ abstract class PasswordCopy extends Base
 			}
 			
 			$regExs2	= array(
-					"No such file or directory"				=> "error",
-					"scp\: failed to upload directory"		=> "error",
-					preg_quote($ctrlObj->getRegEx())		=> "completed"
+					"(No such file or directory)"					=> "error",
+					"(scp\: failed to upload directory)"			=> "error",
+					"(scp error\:(\.+)\: No space left on device)"	=> "error",
+					"(".preg_quote($ctrlObj->getRegEx()).")"		=> "completed"
 			);
 			
 			$regExs			= array_merge($regExs, $regExs2);
@@ -84,14 +85,14 @@ abstract class PasswordCopy extends Base
 			$lastHash		= "";
 			$staticCount	= 0; //how many times in the loop have we received no change in the return
 			$maxStatic		= 25; //how many time can the output hash to the same thing before we consider the transfer stalled? EU to US, 10 is too little @ .25 sec loop
-			$mSleep			= 250000; //how many micro secs to sleep each time we are "not done" this + maxStatic makes this more or less responsive (and more or less CPU intensive)
-			
+			$sleep			= 1; //how secs to sleep each time we are "not done" this + maxStatic makes this more or less responsive (and more or less CPU intensive)
+			//1 sec sleep end in about 30-40% cpu load
+			//the issue is the regex checking in the command object method checkData(). it takes loads of CPU
 			$cmdObj->exec();
 			while(true) {
+
 				$ctrlObj->read($cmdObj);
 				if ($cmdObj->getIsDone(true) === false) {
-					
-					usleep($mSleep); //dont redline the CPU
 					$curHash		= hash("sha256", $cmdObj->getData()); //file name, transfer rate lots can change
 					if ($curHash != $lastHash) {
 						$lastHash		= $curHash;
@@ -103,18 +104,21 @@ abstract class PasswordCopy extends Base
 						$rType	= "error";
 						break;
 					}
+
 				} else {
+
 					//completed
 					$data	= $cmdObj->getData();
 					foreach ($regExs as $regEx => $type) {
-						if (preg_match("/".$regEx."/", $data) === 1) {
-							$rValue	= $regEx;
+						if (preg_match("/".$regEx."/", $data, $raw) === 1) {
+							$rValue	= $raw[1];
 							$rType	= $type;
 							break;
 						}
 					}
 					break;
 				}
+				sleep($sleep);//dont redline the CPU
 			}
 		}
 		if ($rType == "completed") {
