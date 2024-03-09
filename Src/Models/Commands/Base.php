@@ -116,6 +116,17 @@ abstract class Base
 		}
 		return $this;
 	}
+	public function readOnce()
+	{
+		//helpful when running many shells and want to check if a particular command is finished
+		if ($this->_isDone === false) {
+			if ($this->_isExec === false) {
+				$this->exec();
+			}
+			$this->getParent()->read($this);
+		}
+		return $this;
+	}
 	public function exec()
 	{
 		if ($this->_isExec === false) {

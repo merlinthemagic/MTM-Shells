@@ -11,35 +11,43 @@ composer require merlinthemagic/mtm-shells
 
 ```
 
-### Allow root shells:
-
-#### Using Sudo:
-
-Edit: /etc/sudoers
-
-```
-## Allow root to run any commands anywhere
-root    ALL=(ALL)       ALL
-## Add the line below, replace apache with whatever name your run your webserver with e.g. www-data
-apache ALL=(ALL)NOPASSWD:/usr/bin/python
-
-```
-
 ### Get shell:
 
 #### Bash as current user (e.g. apache, www-data, etc):
 
 ```
-$ctrlObj		= \MTM\Shells\Factories::getShells()->getBash();
+$ctrlObj		= \MTM\Shells\Factories::getShells()->getBash(false);
+
 ```
 	
 #### Bash as root:
 
+Obviously letting PHP anywhere near root is a poor idea, but the option is there.
+
+##### Allowing PHP user to run sudo:
+
+Add last line of the below snippit to the file: /etc/sudoers
+
 ```
-$ctrlObj		= \MTM\Shells\Factories::getShells()->getBash(true); //when the user is allowed to sudo python
+## Allow root to run any commands anywhere
+root    ALL=(ALL)       ALL
+## Add the line below, replace apache with whatever name your run your webserver with e.g. www-data
+apache	ALL=(ALL)NOPASSWD:/usr/bin/python3
 
-OR
+```
 
+Then get a shell allowing MTM-Shells to use the sudo permissions we gave the webserver user over python3:
+
+```
+//get a root shell via sudo
+$ctrlObj		= \MTM\Shells\Factories::getShells()->getBash(true);
+
+```
+
+If you dont like giving sudo permissions to the webserver, you can use SU and provide the password:
+
+```
+//get a root shell with password
 $username		= "root";
 $password		= "very_secret";
 
