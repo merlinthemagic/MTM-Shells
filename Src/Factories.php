@@ -29,4 +29,11 @@ class Factories
 		}
 		return self::$_s[__FUNCTION__];
 	}
+	public static function getStencils()
+	{
+		if (array_key_exists(__FUNCTION__, self::$_s) === false) {
+			self::$_s[__FUNCTION__]	= new \MTM\Shells\Factories\Stencils();
+		}
+		return self::$_s[__FUNCTION__];
+	}
 }
