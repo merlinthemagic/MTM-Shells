@@ -30,27 +30,37 @@ apache ALL=(ALL)NOPASSWD:/usr/bin/python
 #### Bash as current user (e.g. apache, www-data, etc):
 
 ```
-$shellObj		= \MTM\Shells\Factories::getShells()->getBash();
+$ctrlObj		= \MTM\Shells\Factories::getShells()->getBash();
 ```
 	
 #### Bash as root:
 
 ```
-$shellObj		= \MTM\Shells\Factories::getShells()->getBash(true);
+$ctrlObj		= \MTM\Shells\Factories::getShells()->getBash(true); //when the user is allowed to sudo python
+
+OR
+
+$username		= "root";
+$password		= "very_secret";
+
+$ctrlObj		= \MTM\Shells\Factories::getShells()->getBash();
+\MTM\Shells\Factories::getStencils()->getLinux()->getSu()->byPassword($ctrlObj, $username, $password);
+
+echo $ctrlObj->getCmd("whoami")->get(); //root
 
 ```
 
 #### Execute commands
 ```
-$strCmd	= "whoami";
-$data		= $shellObj->getCmd($strCmd)->get();
+$strCmd		= "whoami";
+$data		= $ctrlObj->getCmd($strCmd)->get();
 echo $data; //webserver user or if you got a root shell, then root :)
 
 $strCmd1	= "cd /var";
-$shellObj->getCmd($strCmd1)->get(); //enter the /var directory
+$ctrlObj->getCmd($strCmd1)->get(); //enter the /var directory
 
 $strCmd2	= "ls -sho --color=none";
-$data		= $shellObj->getCmd($strCmd2)->get();
+$data		= $ctrlObj->getCmd($strCmd2)->get();
 echo $data; //directory and file listing from /var
 ```
 
@@ -62,16 +72,16 @@ Note: SFTP will not include the source directory only all child files and direct
 Note: Destination directories that do not exist will be created
 
 ```
-$shellObj		= \MTM\Shells\Factories::getShells()->getBash(); //can also be a ssh shell obj from MTM-SSH
+$ctrlObj		= \MTM\Shells\Factories::getShells()->getBash(); //can also be a ssh shell obj from MTM-SSH
 $toolObj		= \MTM\Shells\Factories::getFiles()->getSftpTool();
 
-$srcDir		= "/path/to/dir/";
-$dstDir		= "/";
-$ipAddr		= "192.168.1.15";
+$srcDir			= "/path/to/dir/";
+$dstDir			= "/";
+$ipAddr			= "192.168.1.15";
 $username		= "myUserName";
 $password		= "verySecret";
 
-$toolObj->passwordCopy($shellObj, $srcDir, $dstDir, $ipAddr, $username, $password);
+$toolObj->passwordCopy($ctrlObj, $srcDir, $dstDir, $ipAddr, $username, $password);
 
 ```
 
@@ -81,16 +91,16 @@ Note: SCP will include the source directory and all child files and directories 
 Note: The base destination directory must exist and will not be created
 
 ```
-$shellObj		= \MTM\Shells\Factories::getShells()->getBash(); //can also be a ssh shell obj from MTM-SSH
+$ctrlObj		= \MTM\Shells\Factories::getShells()->getBash(); //can also be a ssh shell obj from MTM-SSH
 $toolObj		= \MTM\Shells\Factories::getFiles()->getScpTool();
 
-$srcDir		= "/path/to/dir/";
-$dstDir		= "/dst/dir/"; //must exist
-$ipAddr		= "192.168.1.15";
+$srcDir			= "/path/to/dir/";
+$dstDir			= "/dst/dir/"; //must exist
+$ipAddr			= "192.168.1.15";
 $username		= "myUserName";
 $password		= "verySecret";
 
-$toolObj->passwordCopy($shellObj, $srcDir, $dstDir, $ipAddr, $username, $password);
+$toolObj->passwordCopy($ctrlObj, $srcDir, $dstDir, $ipAddr, $username, $password);
 
 ```
 
@@ -100,15 +110,15 @@ Note: RSync will include the source directory and all child files and directorie
 Note: The base destination directory must exist and will not be created
 
 ```
-$shellObj		= \MTM\Shells\Factories::getShells()->getBash(); //can also be a ssh shell obj from MTM-SSH
+$ctrlObj		= \MTM\Shells\Factories::getShells()->getBash(); //can also be a ssh shell obj from MTM-SSH
 $toolObj		= \MTM\Shells\Factories::getFiles()->getRsyncTool();
 
-$srcDir		= "/path/to/dir/";
-$dstDir		= "/dst/dir/"; //must exist
-$ipAddr		= "192.168.1.15";
+$srcDir			= "/path/to/dir/";
+$dstDir			= "/dst/dir/"; //must exist
+$ipAddr			= "192.168.1.15";
 $username		= "myUserName";
 $password		= "verySecret";
 
-$toolObj->passwordCopy($shellObj, $srcDir, $dstDir, $ipAddr, $username, $password);
+$toolObj->passwordCopy($ctrlObj, $srcDir, $dstDir, $ipAddr, $username, $password);
 
 ```
