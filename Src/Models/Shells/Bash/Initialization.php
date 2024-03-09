@@ -75,7 +75,11 @@ class Initialization extends Processing
 				//dont record a history for this session
 				$strCmd	= "unset HISTFILE";
 				$this->getCmd($strCmd)->get();
-	
+				
+				//disable bracketed paste for the current xterm session
+				$strCmd	= "bind 'set enable-bracketed-paste 0'";
+				$this->getCmd($strCmd)->get();
+				
 				if ($this->getParent() === null) {
 					//if there is no parent then this is the initial shell
 					//get the PIDs back to init, we can use this to kill the shell if everything else fails.
