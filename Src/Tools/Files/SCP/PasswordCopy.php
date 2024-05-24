@@ -72,7 +72,9 @@ abstract class PasswordCopy extends Base
 			$regExs2	= array(
 					"No such file or directory"						=> "error",
 					"scp\: failed to upload directory"				=> "error",
-					"scp error\:(\.+)\: No space left on device"	=> "error",
+					"scp error\:(.+)\: No space left on device"		=> "error",
+					"scp error\:(.+)\: bad path\!"					=> "error",
+					"scp error\:((.+)\:(.+))"						=> "error",
 					preg_quote($ctrlObj->getRegEx())				=> "completed"
 			);
 			
@@ -121,12 +123,13 @@ abstract class PasswordCopy extends Base
 				sleep($sleep);//dont redline the CPU
 			}
 		}
+
 		if ($rType == "completed") {
 			return true;
 		} elseif ($rType == "error") {
-			throw new \Exception("Error: '".$rValue."'");
+			throw new \Exception("Error: '".$rValue."'", 1111);
 		} else {
-			throw new \Exception("Not Handled: '".$rType."'");
+			throw new \Exception("Not Handled: '".$rType."'", 1111);
 		}
 	}
 }
