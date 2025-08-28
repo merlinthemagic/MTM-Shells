@@ -9,7 +9,10 @@ abstract class Base
 	protected $_childObj=null; //shell built on top of this instance
 	protected $_cmdObj=null; //currently executing
 	protected $_dTimeout=25000;
-	protected $_isInit=false;
+	protected $_isInit=false; //shell has been fully setup
+	protected $_isTerm=false; //shell is terminated
+	protected $_initActive=false; //init is active
+	protected $_termActive=false; //termination is active
 	
 	public function __construct()
 	{
@@ -35,6 +38,10 @@ abstract class Base
 	public function isInit()
 	{
 		return $this->_isInit;
+	}
+	public function isTerm()
+	{
+		return $this->_isTerm;
 	}
 	public function setChild($obj)
 	{

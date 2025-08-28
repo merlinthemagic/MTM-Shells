@@ -1,5 +1,5 @@
 <?php
-//© 2019 Martin Peter Madsen
+//ï¿½ 2019 Martin Peter Madsen
 namespace MTM\Shells\Models\Shells\Bash;
 
 class Actions extends Initialization
@@ -13,7 +13,12 @@ class Actions extends Initialization
 	public function getCmd($strCmd=null, $regExp=null, $timeout=null)
 	{
 		if ($this->getChild() === null) {
-			$this->initialize();
+			if ($this->isInit() === false) {
+				$this->initialize();
+			}
+			if ($this->isTerm() === true) {
+				throw new \Exception("Cannot create command, shell is in terminated state", 1111);
+			}
 			$rObj	= new \MTM\Shells\Models\Commands\Bash();
 			$rObj->setParent($this)->setCmd($strCmd)->setCommit($this->getCommit());
 			if ($regExp === null) {
@@ -38,7 +43,7 @@ class Actions extends Initialization
 		$this->getCmd($strCmd)->get();
 		$rObj	= $this->getTerminalSize(true);
 		if ($rObj->height != $height || $rObj->width != $width) {
-			throw new \MHT\MException(__METHOD__ . ">> Failed to set Terminal size");
+			throw new \Exception("Failed to set Terminal size", 1111);
 		}
 	}
 	public function getTerminalSize($refresh=true)
@@ -54,7 +59,7 @@ class Actions extends Initialization
 				$this->_termHeight	= intval($raw[1]);
 				$this->_termWidth	= intval($raw[2]);
 			} else {
-				throw new \Exception("Failed to get Terminal size");
+				throw new \Exception("Failed to get Terminal size", 1111);
 			}
 		}
 		$rObj			= new \stdClass();
@@ -80,7 +85,7 @@ class Actions extends Initialization
 				}
 			}
 			if ($this->_rwDir === null) {
-				throw new \Exception("Failed to get temp directory");
+				throw new \Exception("Failed to get temp directory", 1111);
 			}
 		}
 		return $this->_rwDir;
@@ -96,7 +101,7 @@ class Actions extends Initialization
 			if (preg_match("/([0-9]+)/", $data, $raw) == 1) {
 				$this->_maxInput	= intval($raw[1]);
 			} else {
-				throw new \Exception("Failed to get max input length");
+				throw new \Exception("Failed to get max input length", 1111);
 			}
 		}
 		return $this->_maxInput;

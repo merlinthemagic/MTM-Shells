@@ -45,8 +45,8 @@ class Initialization extends Processing
 	}
 	public function initialize()
 	{
-		if ($this->_isInit === false) {
-			$this->_isInit	= null;
+		if ($this->_isInit === false && $this->_initActive === false) {
+			$this->_initActive	= true;
 			
 			try {
 				
@@ -54,7 +54,7 @@ class Initialization extends Processing
 				//if we change the identity of the device, the prompt changes too
 
 				if ($this->resetDefaultRegEx() === null) {
-					throw new \Exception("Failed to get shell prompt");
+					throw new \Exception("Failed to get shell prompt", 1111);
 				}
 
 				//reset the output so we have a clean beginning
@@ -62,10 +62,11 @@ class Initialization extends Processing
 				$this->getPipes()->resetStdOut();
 				
 				//fully initialized
-				$this->_isInit	= true;
+				$this->_isInit		= true;
+				$this->_initActive	= false;
 				
 			} catch (\Exception $e) {
-				$this->_isInit	= false;
+				$this->_initActive	= false;
 				throw $e;
 			}
 		}

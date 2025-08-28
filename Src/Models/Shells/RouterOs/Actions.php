@@ -1,5 +1,5 @@
 <?php
-//© 2019 Martin Peter Madsen
+//ï¿½ 2019 Martin Peter Madsen
 namespace MTM\Shells\Models\Shells\RouterOs;
 
 class Actions extends Initialization
@@ -9,7 +9,12 @@ class Actions extends Initialization
 	public function getCmd($strCmd=null, $regExp=null, $timeout=null)
 	{
 		if ($this->getChild() === null) {
-			$this->initialize();
+			if ($this->isInit() === false) {
+				$this->initialize();
+			}
+			if ($this->isTerm() === true) {
+				throw new \Exception("Cannot create command, shell is in terminated state", 1111);
+			}
 			$rObj	= new \MTM\Shells\Models\Commands\RouterOs();
 			$rObj->setParent($this)->setCmd($strCmd)->setCommit($this->getCommit());
 			if ($regExp === null) {

@@ -1,9 +1,11 @@
 <?php
-//© 2019 Martin Peter Madsen
+//ï¿½ 2019 Martin Peter Madsen
 namespace MTM\Shells\Models\Shells\RouterOs;
 
 class Termination extends \MTM\Shells\Models\Shells\Base
 {
+	
+	
 	protected function issueSigInt($throw=true)
 	{
 		//SIGINT current process and get prompt
@@ -17,39 +19,44 @@ class Termination extends \MTM\Shells\Models\Shells\Base
 	}
 	public function terminate()
 	{
-		if ($this->_isInit === true) {
-			$this->_isInit	= null;
-			if (is_object($this->getChild()) === true) {
-				$this->getChild()->terminate();
-			}
-			//throwing during shutdown is still a problem
-			if ($this->isBaseTerm() === false) {
-				//make sure the last command is dead
+		if ($this->_isTerm === false && $this->_termActive === false) {
+			$this->_termActive	= true;
+			
+			if ($this->_isInit === true) {
 				
-				$this->issueSigInt(false);
-				$cmdObj		= $this->getCmd();
-				$strCmd		= "/quit";
-				$regEx		= false;
-				$timeout	= 0;
-				if ($this->getParent() !== null) {
-					$regEx		= "(".preg_quote($this->getParent()->getRegEx()).")";
-					$timeout	= $cmdObj->getTimeout();
+				if (is_object($this->getChild()) === true) {
+					$this->getChild()->terminate();
 				}
-				$cmdObj->setCmd($strCmd)->setDelimitor($regEx)->setTimeout($timeout);
-				$cmdObj->get(false);
-				
-				$pObj	= $this->getParent();
-				if ($pObj !== null) {
-					$pObj->setChild(null);
-					$this->setParent(null);
+	
+				//throwing during shutdown is still a problem
+				if ($this->isBaseTerm() === false) {
 					
-					if ($pObj->getParent() === null) {
-						//below us is a base shell setup just to facilitate this shell
-						$pObj->terminate();
+					//make sure the last command is dead
+					$this->issueSigInt(false);
+					$cmdObj		= $this->getCmd();
+					$strCmd		= "/quit";
+					$regEx		= false;
+					$timeout	= 0;
+					if ($this->getParent() !== null) {
+						$regEx		= "(".preg_quote($this->getParent()->getRegEx()).")";
+						$timeout	= $cmdObj->getTimeout();
+					}
+					$cmdObj->setCmd($strCmd)->setDelimitor($regEx)->setTimeout($timeout);
+					$cmdObj->get(false);
+					$pObj	= $this->getParent();
+					if ($pObj !== null) {
+						$pObj->setChild(null);
+						$this->setParent(null);
+						
+						if ($pObj->getParent() === null) {
+							//below us is a base shell setup just to facilitate this shell
+							$pObj->terminate();
+						}
 					}
 				}
 			}
-			$this->_isInit	= false;
+			$this->_isTerm		= true;
+			$this->_termActive	= false;
 		}
 	}
 	public function exceptHandler($e)

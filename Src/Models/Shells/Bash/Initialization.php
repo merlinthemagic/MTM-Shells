@@ -33,9 +33,9 @@ class Initialization extends Processing
 	}
 	public function initialize()
 	{
-		if ($this->_isInit === false) {
-			$this->_isInit	= null;
-			
+		if ($this->_isInit === false && $this->_initActive === false) {
+			$this->_initActive	= true;
+
 			try {
 				
 				//set the prompt to a known value
@@ -65,10 +65,7 @@ class Initialization extends Processing
 						}
 					}
 				}
-				
-				
-				
-				
+
 				//ssh connections will not inherit the terminal width of the parent.
 				$this->setTerminalSize(1000, 1000);
 				
@@ -131,6 +128,13 @@ class Initialization extends Processing
 					$osTool		= \MTM\Utilities\Factories::getSoftware()->getOsTool();
 					$psPath		= $osTool->getExecutablePath("ps");
 					$killPath	= $osTool->getExecutablePath("kill");
+					
+					if ($killPath === false) {
+						throw new \Exception("Missing Kill application", 1111);
+					} elseif ($psPath === false) {
+						throw new \Exception("Missing PS application", 1111);
+					} 
+					
 					$loopSleep	= 2;
 					$procPid	= getmypid();
 					
@@ -141,8 +145,6 @@ class Initialization extends Processing
 					//nohup is POSIX compliant and will ignore any parent hangup signal
 					$strCmd		.= " nohup sh -c '";
 					
-					//currently the only senario that causes a zombie process is php execution timeout.
-					//when that happens register_shutdown_function is not called and the lock file is never removed.
 					$phpMax		= ini_get("max_execution_time");
 					if ($phpMax > 0) {
 						
@@ -197,7 +199,7 @@ class Initialization extends Processing
 					$strCmd		.= " rm -rf \"".$this->getPipes()->getLock()->getDirectory()->getPathAsString()."\"; ";
 					
 					//debug log
-// 					$strCmd		.= " echo \"Ended bash shell: ".$this->getPipes()->getLock()->getDirectory()->getName()."\" >> ".MTM_FS_TEMP_PATH."mtm-shells.log";
+// 					$strCmd		.= " echo \"Guard process stepped in: ".$this->getPipes()->getLock()->getDirectory()->getName().": ".$this->getGuid()."\" >> ".MTM_FS_TEMP_PATH."mtm-shells.log";
 
 					//we dont want output
 					$strCmd		.= " ' & ) > /dev/null 2>&1;";
@@ -209,10 +211,11 @@ class Initialization extends Processing
 				$this->getPipes()->resetStdOut();
 				
 				//fully initialized
-				$this->_isInit	= true;
+				$this->_isInit		= true;
+				$this->_initActive	= false;
 				
 			} catch (\Exception $e) {
-				$this->_isInit	= false;
+				$this->_initActive	= false;
 				throw $e;
 			}
 		}
@@ -221,192 +224,197 @@ class Initialization extends Processing
 	{
 		if ($this->_basePipes === null) {
 			
-			if ($this->getParent() === null) {
+			if ($this->getParent() !== null) {
+				throw new \Exception("Has parent, cannot be base", 1111);
+			} elseif ($this->_isTerm === true) {
+				throw new \Exception("Cannot establish base pipes, shell terminated", 1111);
+			} elseif ($this->_termActive === true) {
+				throw new \Exception("Cannot establish base pipes, shell is currently terminating", 1111);
+			}
+			
+			$osTool		= \MTM\Utilities\Factories::getSoftware()->getOsTool();
+			if ($osTool->getType() == "linux") {
+
+				//get exe paths
+				$killPath		= $osTool->getExecutablePath("kill");
+				$bashPath		= $osTool->getExecutablePath("bash");
+				$pythonPath		= $osTool->getExecutablePath("python3"); //prefer python3
 				
-				$osTool		= \MTM\Utilities\Factories::getSoftware()->getOsTool();
-				if ($osTool->getType() == "linux") {
-
-					//get exe paths
-					$killPath		= $osTool->getExecutablePath("kill");
-					$bashPath		= $osTool->getExecutablePath("bash");
-					$pythonPath		= $osTool->getExecutablePath("python3"); //prefer python3
+				if ($killPath === false) {
+					throw new \Exception("Missing Kill application", 1111);
+				} elseif ($bashPath === false) {
+					throw new \Exception("Missing Bash application", 1111);
+				} elseif ($pythonPath === false) {
+					//e.g. Centos8 does not ship with python
+					//dnf install python3 -y
+					//rm -rf /usr/bin/python; ln -s /usr/bin/python3 /usr/bin/python
 					
-					if ($killPath === false) {
-						throw new \Exception("Missing Kill application");
-					} elseif ($bashPath === false) {
-						throw new \Exception("Missing Bash application");
-					} elseif ($pythonPath === false) {
-						//e.g. Centos8 does not ship with python
-						//dnf install python3 -y
-						//rm -rf /usr/bin/python; ln -s /usr/bin/python3 /usr/bin/python
-						
-						$pythonPath		= $osTool->getExecutablePath("python");
-						if ($pythonPath === false) {
-							throw new \Exception("Missing Python application");
-						}
+					$pythonPath		= $osTool->getExecutablePath("python");
+					if ($pythonPath === false) {
+						throw new \Exception("Missing Python executable", 1111);
 					}
-					
-					if ($this->_useSudo === true) {
-						$sudoTool		= \MTM\Utilities\Factories::getSoftware()->getSudoTool();
-						if ($sudoTool->isEnabled("python") === false) {
-							throw new \Exception("Cannot sudo python");
-						}
-					}
-
-					$fileFact	= \MTM\FS\Factories::getFiles();
-					$dirFact	= \MTM\FS\Factories::getDirectories();
-
-					$height		= 1000;
-					$width		= 1000;
-					//need non temp, since temp are torn down too quickly on destroy
-					//files are removed before we have finshed up the termination process
-					$dirObj		= $dirFact->getNonTempDirectory();
-					$stdIn		= $fileFact->getFile("stdIn", $dirObj);
-					$stdOut		= $fileFact->getFile("stdOut", $dirObj);
-					$stdErr		= $fileFact->getFile("stdErr", $dirObj);
-					$lock		= $fileFact->getFile("procLock", $dirObj);
-					
-					//will only be triggered on shutdown, so its ok if FS removes
-					//the file before we manage to terminate
-					$fileFact->setAsTempFile($lock);
-					
-					//create files
-					$stdOut->create();
-					$stdErr->create();
-					$lock->create();
-
-					//on RHEL 7 the xterm TERM will show a duplicate PS1 command that cannot be removed,
-					
-					//xterm-mono might work and help us with those pesky colors, need testing
-					$term	= "vt100";
-					
-					//create stdIn pipe
-					$strCmd	= "mkfifo ".$stdIn->getPathAsString().";";
-					
-					//segment off the entire command so we can return from exec() right away
-					$strCmd	.= " (";
-					
-					//stdIn must be bound to a process. We will be writing to it like a file
-					//so we use sleep to hold the pipe open
-					$strCmd		.= " sleep 1000d > ".$stdIn->getPathAsString()." &";
-					
-					//segment off the spawned process
-					$strCmd		.= " (";
-					
-					//setup the environment that the spawned python shell will inherit
-					$strCmd			.= " export TERM=".$term.";";
-					
-					//because the sleep process that is holding stdIn open is not bound
-					//we need a way to tear it down when we exit
-					$strCmd			.= " SLEEP_PID=\$! ;";
-
-					//are we going to spawn a root shell using sudo?
-					if ($this->_useSudo === true) {
-						$strCmd		.= " sudo";
-					}
-					
-					//setup python to spawn a new bash shell
-					$strCmd			.= " " . $pythonPath." -c";
-					$strCmd			.= " \"";
-					
-					//import the python os and pty packages
-					$strCmd				.= "import pty, os;";
-					
-					//set the height of the environment
-					$strCmd				.= " os.environ['LINES'] = '".$height."';";
-					
-					//set the width of the environment
-					$strCmd				.= " os.environ['COLUMNS'] = '".$width."';";
-										
-					//spawn bash as the new process
-					$strCmd				.= " pty.spawn(['" . $bashPath . "']);";
-
-					$strCmd			.= "\"";
-					
-					//instruct the python shell to use our files and stdIn/stdOut/stdErr
-					$strCmd			.= " < " . $stdIn->getPathAsString();
-					$strCmd			.= " > " . $stdOut->getPathAsString();
-					$strCmd			.= " 2> " . $stdErr->getPathAsString() . ";";
-					
-					//when the python process exits wait a bit before cleaning up, maybe PHP wants one more read of stdOut
-					$strCmd			.= " sleep 2s;";
-					
-					//kill the sleep process holding stdIn open
-					$strCmd			.= " \"".$killPath."\" -9 \$SLEEP_PID ;";
-					
-					//remove the directory we are working in
-					$strCmd			.= " rm -rf ".$dirObj->getPathAsString()." &";
-					
-					//end of segment
-					$strCmd		.= " ) &";
-					
-					//end of segment
-					$strCmd	.= " )";
-					
-					//send all output to null
-					$strCmd	.= " > /dev/null 2>&1";
-
-					//give me a shell!
-					exec($strCmd, $rData, $status);
-					if ($status != 0) {
-						throw new \Exception("Failed to excute shell setup: " . $status);
-					}
-					
-					try {
-						
-						//if the server is busy it could take a bit to setup the shell
-						$maxWait	= 30;
-						$eTime		= time() + $maxWait;
-						$stdInOk	= false;
-						while ($eTime > time()) {
-							
-							$stdErrData	= $stdErr->getContent();
-							if ($stdErrData != "") {
-								$stdErrData		= trim($stdErrData);
-								break;
-							}
-							
-							//simply checking if the file exists is not enough
-							//many exceptions are caused by the stdin pipe not being ready to accept data
-							$stdInFp		= @fopen($stdIn->getPathAsString(), "an");
-							if (is_resource($stdInFp) === true) {
-								fclose($stdInFp);
-								$stdInOk	= true;
-								break;
-							} else {
-								usleep(10000);
-							}
-						}
-						
-						if ($stdErrData != "") {
-							
-							if (strpos("SyntaxError: Non-ASCII character", $stdErrData) !== false) {
-								//need to deal with the environment for python 2
-								//cannot figure out how to force utf-8, which is the standard on python3
-								throw new \Exception("Failed to create shell. Please consider using python3. Error: '".$stdErrData."'");
-							} else {
-								throw new \Exception("Failed to create shell. Error: '".$stdErrData."'");
-							}
-							
-						} elseif ($stdInOk !== true) {
-							throw new \Exception("stdIn was never created");
-						}
-						
-						$this->_basePipes	= new \MTM\Shells\Models\Shells\ProcessPipe();
-						$this->_basePipes->setPipes($stdIn, $stdOut, $stdErr)->setLock($lock);
-
-					} catch (\Exception $e) {
-						$dirObj->delete();
-						throw $e;
-					}
-
-				} else {
-					throw new \Exception("Not handled");
 				}
 				
+				if ($this->_useSudo === true) {
+					$sudoTool		= \MTM\Utilities\Factories::getSoftware()->getSudoTool();
+					if ($sudoTool->isEnabled("python") === false) {
+						throw new \Exception("Cannot sudo python", 1111);
+					}
+				}
+
+				$fileFact	= \MTM\FS\Factories::getFiles();
+				$dirFact	= \MTM\FS\Factories::getDirectories();
+
+				$height		= 1000;
+				$width		= 1000;
+				//need non temp, since temp are torn down too quickly on destroy
+				//files are removed before we have finshed up the termination process
+				$dirObj		= $dirFact->getNonTempDirectory();
+				$stdIn		= $fileFact->getFile("stdIn", $dirObj);
+				$stdOut		= $fileFact->getFile("stdOut", $dirObj);
+				$stdErr		= $fileFact->getFile("stdErr", $dirObj);
+				$lock		= $fileFact->getFile("procLock", $dirObj);
+				
+				
+				//will only be triggered on shutdown, so its ok if FS removes
+				//the file before we manage to terminate
+				$fileFact->setAsTempFile($lock);
+				
+				//create files
+				$stdOut->create();
+				$stdErr->create();
+				$lock->create();
+
+				//on RHEL 7 the xterm TERM will show a duplicate PS1 command that cannot be removed,
+				
+				//xterm-mono might work and help us with those pesky colors, need testing
+				$term	= "vt100";
+				
+				//create stdIn pipe
+				$strCmd	= "mkfifo ".$stdIn->getPathAsString().";";
+				
+				//segment off the entire command so we can return from exec() right away
+				$strCmd	.= " (";
+				
+				//stdIn must be bound to a process. We will be writing to it like a file
+				//so we use sleep to hold the pipe open
+				$strCmd		.= " sleep 1000d > ".$stdIn->getPathAsString()." &";
+				
+				//segment off the spawned process
+				$strCmd		.= " (";
+				
+				//setup the environment that the spawned python shell will inherit
+				$strCmd			.= " export TERM=".$term.";";
+				
+				//because the sleep process that is holding stdIn open is not bound
+				//we need a way to tear it down when we exit
+				$strCmd			.= " SLEEP_PID=\$! ;";
+
+				//are we going to spawn a root shell using sudo?
+				if ($this->_useSudo === true) {
+					$strCmd		.= " sudo";
+				}
+				
+				//setup python to spawn a new bash shell
+				$strCmd			.= " " . $pythonPath." -c";
+				$strCmd			.= " \"";
+				
+				//import the python os and pty packages
+				$strCmd				.= "import pty, os;";
+				
+				//set the height of the environment
+				$strCmd				.= " os.environ['LINES'] = '".$height."';";
+				
+				//set the width of the environment
+				$strCmd				.= " os.environ['COLUMNS'] = '".$width."';";
+									
+				//spawn bash as the new process
+				$strCmd				.= " pty.spawn(['" . $bashPath . "']);";
+
+				$strCmd			.= "\"";
+				
+				//instruct the python shell to use our files and stdIn/stdOut/stdErr
+				$strCmd			.= " < " . $stdIn->getPathAsString();
+				$strCmd			.= " > " . $stdOut->getPathAsString();
+				$strCmd			.= " 2> " . $stdErr->getPathAsString() . ";";
+				
+				//when the python process exits wait a bit before cleaning up, maybe PHP wants one more read of stdOut
+				$strCmd			.= " sleep 2s;";
+				
+				//kill the sleep process holding stdIn open
+				$strCmd			.= " \"".$killPath."\" -9 \$SLEEP_PID ;";
+				
+				//remove the directory we are working in
+				$strCmd			.= " rm -rf ".$dirObj->getPathAsString()." &";
+				
+				//end of segment
+				$strCmd		.= " ) &";
+				
+				//end of segment
+				$strCmd	.= " )";
+				
+				//send all output to null
+				$strCmd	.= " > /dev/null 2>&1";
+
+				//give me a shell!
+				exec($strCmd, $rData, $status);
+				if ($status != 0) {
+					throw new \Exception("Failed to excute shell setup: " . $status, 1111);
+				}
+				
+				try {
+					
+					//if the server is busy it could take a bit to setup the shell
+					$maxWait	= 30;
+					$eTime		= time() + $maxWait;
+					$stdInOk	= false;
+					while ($eTime > time()) {
+						
+						$stdErrData	= $stdErr->getContent();
+						if ($stdErrData != "") {
+							$stdErrData		= trim($stdErrData);
+							break;
+						}
+						
+						//simply checking if the file exists is not enough
+						//many exceptions are caused by the stdin pipe not being ready to accept data
+						$stdInFp		= @fopen($stdIn->getPathAsString(), "an");
+						if (is_resource($stdInFp) === true) {
+							fclose($stdInFp);
+							$stdInOk	= true;
+							break;
+						} else {
+							usleep(10000);
+						}
+					}
+					
+					if ($stdErrData != "") {
+						
+						if (strpos("SyntaxError: Non-ASCII character", $stdErrData) !== false) {
+							//need to deal with the environment for python 2
+							//cannot figure out how to force utf-8, which is the standard on python3
+							throw new \Exception("Failed to create shell. Please consider using python3. Error: '".$stdErrData."'", 1111);
+						} else {
+							throw new \Exception("Failed to create shell. Error: '".$stdErrData."'", 1111);
+						}
+						
+					} elseif ($stdInOk !== true) {
+						throw new \Exception("stdIn was never created");
+					}
+					
+					$this->_basePipes	= new \MTM\Shells\Models\Shells\ProcessPipe();
+					$this->_basePipes->setPipes($stdIn, $stdOut, $stdErr)->setLock($lock);
+
+				} catch (\Exception $e) {
+					$dirObj->delete();
+					throw $e;
+				}
+
 			} else {
-				throw new \Exception("Has parent, cannot be base");
+				throw new \Exception("Not handled for OS type: '".$osTool->getType()."'", 1111);
 			}
+			
+			
 		}
 		return $this->_basePipes;
 	}
