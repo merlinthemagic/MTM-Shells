@@ -20,6 +20,20 @@ $ctrlObj		= \MTM\Shells\Factories::getShells()->getBash(false);
 
 ```
 	
+#### Execute commands
+```
+$strCmd		= "whoami";
+$data		= $ctrlObj->getCmd($strCmd)->get();
+echo $data; //webserver user or if you got a root shell, then root :)
+
+$strCmd1	= "cd /var";
+$ctrlObj->getCmd($strCmd1)->get(); //enter the /var directory
+
+$strCmd2	= "ls -sho --color=none";
+$data		= $ctrlObj->getCmd($strCmd2)->get();
+echo $data; //directory and file listing from /var
+```
+
 #### Bash as root:
 
 Obviously letting PHP anywhere near root is a poor idea, but the option is there.
@@ -58,19 +72,6 @@ echo $ctrlObj->getCmd("whoami")->get(); //root
 
 ```
 
-#### Execute commands
-```
-$strCmd		= "whoami";
-$data		= $ctrlObj->getCmd($strCmd)->get();
-echo $data; //webserver user or if you got a root shell, then root :)
-
-$strCmd1	= "cd /var";
-$ctrlObj->getCmd($strCmd1)->get(); //enter the /var directory
-
-$strCmd2	= "ls -sho --color=none";
-$data		= $ctrlObj->getCmd($strCmd2)->get();
-echo $data; //directory and file listing from /var
-```
 
 ### Files and directories:
 
