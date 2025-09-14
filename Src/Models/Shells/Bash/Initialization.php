@@ -163,6 +163,7 @@ class Initialization extends Processing
 						$strCmd		.= " LOOPCOUNT+=1;";
 						$strCmd		.= " sleep ".$loopSleep."s;";
 						$strCmd		.= " done;";
+						
 					} else {
 						
 						//if we are in CLI mode, the PID will die with us
