@@ -10,6 +10,7 @@ abstract class Base
 	protected $_isDone=false;
 	protected $_parentObj=null;
 	protected $_strCmd=null;
+	protected $_findCmd=true; //find command in output. set to false when the return will not include the command e.g. password logins
 	protected $_regExp=null;
 	protected $_commit=null;
 	protected $_execTime=null;
@@ -70,6 +71,15 @@ abstract class Base
 	public function getTimeout()
 	{
 		return $this->_timeout;
+	}
+	public function setFindCommand($bool)
+	{
+		$this->_findCmd	= $bool;
+		return $this;
+	}
+	public function getFindCommand()
+	{
+		return $this->_findCmd;
 	}
 	public function getIsExec()
 	{

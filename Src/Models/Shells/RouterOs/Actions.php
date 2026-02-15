@@ -34,6 +34,12 @@ class Actions extends Initialization
 	}
 	public function getPipes()
 	{
-		return $this->getParent()->getPipes();
+		$pObj	= $this->getParent();
+		if ($pObj !== null) {
+			return $pObj->getPipes();
+		} else {
+			//happens if the shell was terminated and someone holds a command obj and executes after
+			throw new \Exception("Cannot get pipes shell has no parent", 1111);
+		}
 	}
 }

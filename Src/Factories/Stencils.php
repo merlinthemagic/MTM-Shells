@@ -11,4 +11,11 @@ class Stencils extends Base
 		}
 		return $this->_s[__FUNCTION__];
 	}
+	public function getRouterOs()
+	{
+		if (array_key_exists(__FUNCTION__, $this->_s) === false) {
+			$this->_s[__FUNCTION__]		= new \MTM\Shells\Factories\Stencils\RouterOs();
+		}
+		return $this->_s[__FUNCTION__];
+	}
 }

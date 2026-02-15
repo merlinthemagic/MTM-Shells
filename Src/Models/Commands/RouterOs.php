@@ -13,7 +13,7 @@ class RouterOs extends Base
 		if (
 			$this->getDelimitor() != ""
 			&& preg_match("/(.*)?(".$this->getDelimitor().")/s", $this->getData()) === 1 //too costly to check return data on every read, just do raw for starters
-			&& $this->getCmdFound() === true
+			&& ($this->getFindCommand() === false || $this->getCmdFound() === true)
 			&& preg_match("/".$this->getDelimitor()."/s", $this->getReturnData()) === 1
 		) {
 			$this->setDone();
