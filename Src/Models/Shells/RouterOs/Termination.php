@@ -4,8 +4,6 @@ namespace MTM\Shells\Models\Shells\RouterOs;
 
 class Termination extends \MTM\Shells\Models\Shells\Base
 {
-	
-	
 	protected function issueSigInt($throw=true)
 	{
 		//SIGINT current process and get prompt
@@ -43,16 +41,17 @@ class Termination extends \MTM\Shells\Models\Shells\Base
 					}
 					$cmdObj->setCmd($strCmd)->setDelimitor($regEx)->setTimeout($timeout);
 					$cmdObj->get(false);
-					$pObj	= $this->getParent();
-					if ($pObj !== null) {
-						$pObj->setChild(null);
-						$this->setParent(null);
-						
-						if ($pObj->getParent() === null) {
-							//below us is a base shell setup just to facilitate this shell
-							$pObj->terminate();
-						}
-					}
+					
+				}
+			}
+			$pObj	= $this->getParent();
+			if ($pObj !== null) {
+				$pObj->setChild(null);
+				$this->setParent(null);
+				
+				if ($pObj->getParent() === null) {
+					//below us is a base shell setup just to facilitate this shell
+					$pObj->terminate();
 				}
 			}
 			$this->_isTerm		= true;
